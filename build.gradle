@@ -30,6 +30,9 @@ dependencies {
     // PostgreSQL
     runtimeOnly 'org.postgresql:postgresql'
 
+    // Liquibase
+    implementation 'org.liquibase:liquibase-core'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
@@ -42,7 +45,7 @@ dependencies {
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
 
-    // JSON
+    // JSON (нужно ли?...)
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     // Tesseract (Библиотека для распознавания текста... но только машиночитаемого? рукописный потом будет через питончик видимо)

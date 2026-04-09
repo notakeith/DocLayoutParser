@@ -41,6 +41,9 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
+    // Logger
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+
     // MapStruct
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
@@ -58,3 +61,25 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+task downloadTessData {
+    def tessDataDir = "src/main/resources/tessdata"
+    def fileName = "rus.traineddata"
+    def outputFile = file("${tessDataDir}/${fileName}")
+
+    outputs.file(outputFile)
+
+    doLast {
+        if (!outputFile.exists()) {
+            println "Downloading Tesseract data..."
+            mkdir tessDataDir
+            def fileUrl = "https://github.com/tesseract-ocr/tessdata/raw/main/rus.traineddata"
+            new URL(fileUrl).withInputStream { i -> outputFile.withOutputStream { it << i } }
+            println "Download complete: ${outputFile.absolutePath}"
+        } else {
+            println "File already exists: ${outputFile.absolutePath}"
+        }
+    }
+}
+
+compileJava.dependsOn downloadTessData

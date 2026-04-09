@@ -1,25 +1,43 @@
 package org.sparklingduo.infrastructure.ocr;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
 import org.sparklingduo.domain.port.OcrProvider;
 import org.sparklingduo.domain.template.FieldType;
+import org.sparklingduo.infrastructure.config.AppProperties;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class TesseractOcrService implements OcrProvider {
 
+    private final AppProperties appProperties;
+
     @Override
-    public String extractText(byte[] imageContent, FieldType type) {
+    public String extractText(byte[] imageContent, FieldType type) throws URISyntaxException {
         ITesseract tesseract = new Tesseract();
-        tesseract.setDatapath("src/main/resources/tessdata");
-        tesseract.setLanguage("rus");
+
+        URL resource = getClass().getClassLoader().getResource("tessdata");
+        if (resource != null) {
+            // Конвертируем URL в путь к папке
+            String path = new File(resource.toURI()).getAbsolutePath();
+            tesseract.setDatapath(path);
+        } else {
+            // Если не нашли в classpath, берем из конфига (запасной вариант)
+            tesseract.setDatapath(appProperties.getOcr().getTessdataPath());
+        }
+
+        tesseract.setLanguage(appProperties.getOcr().getLanguage());
 
         try {
             ByteArrayInputStream bis = new ByteArrayInputStream(imageContent);

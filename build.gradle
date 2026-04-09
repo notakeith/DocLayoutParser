@@ -61,25 +61,31 @@ dependencies {
 test {
     useJUnitPlatform()
 }
-
-task downloadTessData {
-    def tessDataDir = "src/main/resources/tessdata"
-    def fileName = "rus.traineddata"
-    def outputFile = file("${tessDataDir}/${fileName}")
-
-    outputs.file(outputFile)
-
-    doLast {
-        if (!outputFile.exists()) {
-            println "Downloading Tesseract data..."
-            mkdir tessDataDir
-            def fileUrl = "https://github.com/tesseract-ocr/tessdata/raw/main/rus.traineddata"
-            new URL(fileUrl).withInputStream { i -> outputFile.withOutputStream { it << i } }
-            println "Download complete: ${outputFile.absolutePath}"
-        } else {
-            println "File already exists: ${outputFile.absolutePath}"
-        }
-    }
-}
-
-compileJava.dependsOn downloadTessData
+//
+//task downloadTessData {
+//    def destinationDir = file("$buildDir/generated-resources/tessdata")
+//    def destFile = file("$destinationDir/rus.traineddata")
+//
+//    // Описываем выходы задачи для системы кеширования Gradle
+//    outputs.file(destFile)
+//
+//    doLast {
+//        if (!destFile.exists()) {
+//            println "Downloading Tesseract data..."
+//            destinationDir.mkdirs()
+//            new URL("https://github.com/tesseract-ocr/tessdata_best/raw/main/rus.traineddata")
+//                    .withInputStream { i -> destFile.withOutputStream { it << i } }
+//            println "Download complete: ${destFile.absolutePath}"
+//        }
+//    }
+//}
+//
+//sourceSets {
+//    main {
+//        resources {
+//            srcDir "$buildDir/generated-resources"
+//        }
+//    }
+//}
+//
+//compileJava.dependsOn downloadTessData

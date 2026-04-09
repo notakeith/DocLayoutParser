@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.sparklingduo.domain.document.DocumentData;
 import org.sparklingduo.domain.document.DocumentImage;
 import org.sparklingduo.domain.document.FieldValue;
+import org.sparklingduo.domain.exception.TemplateNotFoundException;
 import org.sparklingduo.domain.port.ImageProcessor;
 import org.sparklingduo.domain.port.OcrProvider;
 import org.sparklingduo.domain.template.Box;
@@ -16,6 +17,7 @@ import org.sparklingduo.infrastructure.ocr.TesseractOcrService;
 import org.sparklingduo.repository.TemplateRepository;
 import org.springframework.stereotype.Service;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -29,9 +31,9 @@ public class RecognitionService {
     private final OcrProvider ocrProvider;
     private final TemplateRepository templateRepository;
 
-    public DocumentData recognize(DocumentImage image, UUID templateId) {
+    public DocumentData recognize(DocumentImage image, UUID templateId) throws URISyntaxException {
         Template template = templateRepository.findById(templateId)
-                .orElseThrow(() -> new RuntimeException("Template not found"));
+                .orElseThrow(() -> new TemplateNotFoundException("Template with ID " + templateId + " not found."));
 
         byte[] preparedImage = imageProcessor.prepare(image.content());
 
@@ -60,11 +62,11 @@ public class RecognitionService {
 
     private Box scaleBox(Box original, double sx, double sy, int padding) {
         return new Box(
-                (int) (original.x() * sx) - padding,
-                (int) (original.y() * sy) - padding,
-                (int) (original.width() * sx) + (padding * 2),
-                (int) (original.height() * sy) + (padding * 2),
-                original.pageNumber()
+                (int) (original.getX() * sx) - padding,
+                (int) (original.getY() * sy) - padding,
+                (int) (original.getWidth() * sx) + (padding * 2),
+                (int) (original.getHeight() * sy) + (padding * 2),
+                original.getPageNumber()
         );
     }
 }

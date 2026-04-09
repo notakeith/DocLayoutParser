@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.UUID;
 
 @RestController
@@ -25,7 +26,7 @@ public class RecognitionController {
     @PostMapping("/process")
     public ResponseEntity<DocumentData> processDocument(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("templateId") UUID templateId) throws IOException {
+            @RequestParam("templateId") UUID templateId) throws IOException, URISyntaxException {
 
         DocumentImage image = new DocumentImage(
                 file.getBytes(),

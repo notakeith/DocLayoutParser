@@ -6,4 +6,8 @@ public interface ImageProcessor {
     byte[] prepare(byte[] rawImage);
 
     byte[] crop(byte[] preparedImage, Box box);
+
+    record ImageSize(int width, int height) {}
+
+    ImageSize getSize(byte[] imageContent);
 }

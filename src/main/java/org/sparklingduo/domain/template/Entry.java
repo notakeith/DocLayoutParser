@@ -1,14 +1,28 @@
 package org.sparklingduo.domain.template;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import jakarta.persistence.*;
+import lombok.*;
 
-@Getter
+import java.util.UUID;
+
+@Entity
+@Table(name = "template_entries")
+@NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@Getter
 public class Entry {
-    private final String name;
-    private final Box box;
-    private final FieldType type;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    private final int padding; // а-ля допуск, а то я чего-то не подумал что всё поплыть может в зависимости от того кто какую фотку загрузит...
+    private String name;
+
+    @Enumerated(EnumType.STRING)
+    private FieldType type;
+
+    private int padding; // а-ля допуск, а то я чего-то не подумал что всё поплыть может в зависимости от того кто какую фотку загрузит...
+
+    @Embedded
+    private Box box;
 }

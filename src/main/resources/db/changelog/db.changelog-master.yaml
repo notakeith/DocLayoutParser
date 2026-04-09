@@ -1,0 +1,95 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1775763350901-1
+      author: notakeith
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_template_entries
+                  name: id
+                  type: UUID
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: type
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: padding
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: x
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: y
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: width
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: height
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: page_number
+                  type: INT
+              - column:
+                  name: template_id
+                  type: UUID
+            tableName: template_entries
+  - changeSet:
+      id: 1775763350901-2
+      author: notakeith
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_templates
+                  name: id
+                  type: UUID
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: base_width
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: base_height
+                  type: INT
+            tableName: templates
+  - changeSet:
+      id: 1775763350901-3
+      author: notakeith
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: template_id
+            baseTableName: template_entries
+            constraintName: FK_TEMPLATE_ENTRIES_ON_TEMPLATE
+            referencedColumnNames: id
+            referencedTableName: templates
+

@@ -26,7 +26,7 @@ public class TemplateController {
         return templateService.getAllTemplates();
     }
 
-    @DeleteMapping(value = "/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         templateService.deleteTemplate(id);
         return ResponseEntity.noContent().build();

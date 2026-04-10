@@ -69,30 +69,31 @@ test {
     useJUnitPlatform()
 }
 
-//task downloadTessData {
-//    def destinationDir = file("$buildDir/generated-resources/tessdata")
-//    def destFile = file("$destinationDir/rus.traineddata")
-//
-//    // Описываем выходы задачи для системы кеширования Gradle
-//    outputs.file(destFile)
-//
-//    doLast {
-//        if (!destFile.exists()) {
-//            println "Downloading Tesseract data..."
-//            destinationDir.mkdirs()
-//            new URL("https://github.com/tesseract-ocr/tessdata_best/raw/main/rus.traineddata")
-//                    .withInputStream { i -> destFile.withOutputStream { it << i } }
-//            println "Download complete: ${destFile.absolutePath}"
-//        }
-//    }
-//}
-//
-//sourceSets {
-//    main {
-//        resources {
-//            srcDir "$buildDir/generated-resources"
-//        }
-//    }
-//}
-//
-//compileJava.dependsOn downloadTessData
+// 1. Определяем место для хранения скачанных данных вне стандартных путей
+def generatedResDir = layout.buildDirectory.dir("generated-resources-tess")
+
+// 2. Регистрируем задачу скачивания
+tasks.register('downloadTessData') {
+    // Явно указываем Gradle, что эта задача управляет этой папкой
+    outputs.dir(generatedResDir)
+
+    doLast {
+        def tessdataDir = new File(generatedResDir.get().asFile, "tessdata")
+        def targetFile = new File(tessdataDir, "rus.traineddata")
+
+        if (!targetFile.exists()) {
+            println "--- Downloading Tesseract data (best LSTM model)... ---"
+            tessdataDir.mkdirs()
+            new URL("https://github.com/tesseract-ocr/tessdata_best/raw/main/rus.traineddata")
+                    .withInputStream { i -> targetFile.withOutputStream { it << i } }
+            println "--- Download complete! ---"
+        }
+    }
+}
+
+// 3. Настраиваем сборку ресурсов
+processResources {
+    // Говорим задаче processResources: "Возьми всё, что создала задача downloadTessData"
+    // Gradle сам поймет, что нужно сначала запустить скачивание
+    from(downloadTessData)
+}

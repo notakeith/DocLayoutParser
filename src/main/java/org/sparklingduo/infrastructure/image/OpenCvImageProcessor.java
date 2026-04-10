@@ -5,6 +5,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.Rect;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 import org.sparklingduo.domain.exception.ImageProcessingException;
 import org.sparklingduo.domain.port.ImageProcessor;
 import org.sparklingduo.domain.template.Box;
@@ -16,14 +17,27 @@ public class OpenCvImageProcessor implements ImageProcessor {
 
     static {
         // Инициализируем OpenCV один раз при загрузке класса
-        nu.pattern.OpenCV.loadShared();
+        nu.pattern.OpenCV.loadLocally();
     }
 
     @Override
     public byte[] prepare(byte[] imageContent) {
-        // Пока просто возвращаем как есть.
-        // В будущем здесь будет поиск углов листа и Warp Perspective.
-        return imageContent;
+        Mat src = Imgcodecs.imdecode(new MatOfByte(imageContent), Imgcodecs.IMREAD_GRAYSCALE);
+        Mat dest = new Mat();
+
+        // 1. Увеличение резкости (Optional)
+        // 2. Бинаризация (Самое важное!)
+        // Используем Adaptive Thresholding, чтобы убрать тени и пятна бумаги
+        Imgproc.adaptiveThreshold(src, dest, 255,
+                Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
+                Imgproc.THRESH_BINARY, 15, 10);
+
+        // 3. Удаление мелкого шума (Denoising)
+        Imgproc.medianBlur(dest, dest, 1);
+
+        MatOfByte buffer = new MatOfByte();
+        Imgcodecs.imencode(".jpg", dest, buffer);
+        return buffer.toArray();
     }
 
     @Override

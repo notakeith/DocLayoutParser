@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Template Editor</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #f4f4f4; }
+        #canvas-container { position: relative; margin: 20px; border: 2px solid #333; background: white; cursor: crosshair; }
+        canvas { position: absolute; top: 0; left: 0; }
+        #controls { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 800px; }
+        .entry-row { display: flex; gap: 10px; margin-bottom: 5px; align-items: center; border-bottom: 1px solid #eee; padding: 5px; }
+        .sidebar { position: fixed; right: 20px; top: 20px; width: 300px; background: white; padding: 15px; border-radius: 8px; }
+        #preview-img { max-width: 1000px; display: block; }
+    </style>
+</head>
+<body>
+
+<h2>Создание шаблона документа</h2>
+
+<div id="controls">
+    <input type="file" id="imageLoader" accept="image/*">
+    <input type="text" id="templateName" placeholder="Название шаблона (напр. Справка 1941)">
+    <button onclick="saveTemplate()" style="background: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer;">Сохранить шаблон</button>
+</div>
+
+<div id="canvas-container">
+    <img id="preview-img" src="" style="display: none;">
+    <canvas id="drawing-canvas"></canvas>
+</div>
+
+<div class="sidebar">
+    <h3>Поля шаблона</h3>
+    <div id="entries-list"></div>
+</div>
+
+<script>
+    const canvas = document.getElementById('drawing-canvas');
+    const ctx = canvas.getContext('2d');
+    const imageLoader = document.getElementById('imageLoader');
+    const img = document.getElementById('preview-img');
+    const container = document.getElementById('canvas-container');
+
+    let startX, startY, isDrawing = false;
+    let entries = [];
+    let scale = 1;
+
+    // Загрузка картинки
+    imageLoader.addEventListener('change', (e) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            img.onload = () => {
+                img.style.display = 'block';
+                canvas.width = img.clientWidth;
+                canvas.height = img.clientHeight;
+                // Считаем масштаб между реальным фото и тем, что в браузере
+                scale = img.naturalWidth / img.clientWidth;
+                container.style.width = img.clientWidth + 'px';
+                container.style.height = img.clientHeight + 'px';
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    });
+
+    // Рисование
+    canvas.onmousedown = (e) => {
+        startX = e.offsetX;
+        startY = e.offsetY;
+        isDrawing = true;
+    };
+
+    canvas.onmousemove = (e) => {
+        if (!isDrawing) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawAll();
+        ctx.strokeStyle = 'red';
+        ctx.strokeRect(startX, startY, e.offsetX - startX, e.offsetY - startY);
+    };
+
+    canvas.onmouseup = (e) => {
+        if (!isDrawing) return;
+        isDrawing = false;
+
+        const entryName = prompt("Введите название поля (напр. Фамилия):");
+        if (entryName) {
+            entries.push({
+                name: entryName,
+                type: 'TEXT',
+                padding: 5,
+                box: {
+                    x: Math.round(startX * scale),
+                    y: Math.round(startY * scale),
+                    width: Math.round((e.offsetX - startX) * scale),
+                    height: Math.round((e.offsetY - startY) * scale),
+                    pageNumber: 0
+                }
+            });
+            renderEntries();
+        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawAll();
+    };
+
+    function drawAll() {
+        entries.forEach(entry => {
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(entry.box.x/scale, entry.box.y/scale, entry.box.width/scale, entry.box.height/scale);
+            ctx.fillStyle = 'blue';
+            ctx.fillText(entry.name, entry.box.x/scale, (entry.box.y/scale) - 5);
+        });
+    }
+
+    function renderEntries() {
+        const list = document.getElementById('entries-list');
+        list.innerHTML = '';
+        entries.forEach((entry, index) => {
+            list.innerHTML += `
+                <div class="entry-row">
+                    <b>${entry.name}</b>
+                    <select onchange="entries[${index}].type = this.value">
+                        <option value="TEXT">TEXT</option>
+                        <option value="NUMERIC">NUMERIC</option>
+                        <option value="DATE">DATE</option>
+                        <option value="SIGNATURE">SIGNATURE</option>
+                    </select>
+                    <button onclick="entries.splice(${index},1); renderEntries(); drawAll();">❌</button>
+                </div>
+            `;
+        });
+    }
+
+    async function saveTemplate() {
+        const payload = {
+            name: document.getElementById('templateName').value,
+            baseWidth: img.naturalWidth,
+            baseHeight: img.naturalHeight,
+            entries: entries
+        };
+
+        const response = await fetch('/api/templates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            alert("Шаблон успешно сохранен!");
+            window.location.reload();
+        } else {
+            alert("Ошибка при сохранении");
+        }
+    }
+</script>
+</body>
+</html>

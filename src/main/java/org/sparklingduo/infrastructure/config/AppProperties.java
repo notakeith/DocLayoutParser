@@ -18,6 +18,7 @@ public class AppProperties {
         private String tessdataPath;
         // Язык (по умолчанию rus)
         private String language = "rus";
+        private Integer pageSegMode = 7;
     }
 
     @Data

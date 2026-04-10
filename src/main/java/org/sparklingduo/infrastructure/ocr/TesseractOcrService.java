@@ -23,6 +23,10 @@ public class TesseractOcrService implements OcrProvider {
 
     private final AppProperties appProperties;
 
+    static {
+        System.setProperty("jna.library.path", "/opt/homebrew/lib:/usr/local/lib");
+    }
+
     @Override
     public String extractText(byte[] imageContent, FieldType type) throws URISyntaxException {
         ITesseract tesseract = new Tesseract();
@@ -38,6 +42,7 @@ public class TesseractOcrService implements OcrProvider {
         }
 
         tesseract.setLanguage(appProperties.getOcr().getLanguage());
+        tesseract.setPageSegMode(appProperties.getOcr().getPageSegMode());
 
         try {
             ByteArrayInputStream bis = new ByteArrayInputStream(imageContent);

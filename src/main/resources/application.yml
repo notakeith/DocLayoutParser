@@ -27,6 +27,7 @@ spring:
 app:
   ocr:
     tessdata-path: "src/main/resources/tessdata"
-    language: "rus"
+    language: "rus+eng"
+    pageSegMode: 7
   image:
     target-width: 2000

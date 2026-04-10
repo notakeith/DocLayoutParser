@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 1775763350901-1
+      id: 1775840773358-1
       author: notakeith
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -54,7 +54,7 @@ databaseChangeLog:
                   type: UUID
             tableName: template_entries
   - changeSet:
-      id: 1775763350901-2
+      id: 1775840773358-2
       author: notakeith
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -82,7 +82,7 @@ databaseChangeLog:
                   type: INT
             tableName: templates
   - changeSet:
-      id: 1775763350901-3
+      id: 1775840773358-3
       author: notakeith
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:

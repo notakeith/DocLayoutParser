@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.sparklingduo.domain.dto.request.TemplateCreateDto;
 import org.sparklingduo.domain.service.TemplateService;
 import org.sparklingduo.domain.template.Template;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,7 +27,8 @@ public class TemplateController {
     }
 
     @DeleteMapping(value = "/delete/{id}")
-    public void delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         templateService.deleteTemplate(id);
+        return ResponseEntity.noContent().build();
     }
 }

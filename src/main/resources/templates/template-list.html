@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Панель управления шаблонами</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; background: #f8f9fa; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+        .btn { padding: 8px 15px; border-radius: 5px; text-decoration: none; cursor: pointer; border: none; font-size: 14px; }
+        .btn-add { background: #28a745; color: white; margin-bottom: 20px; display: inline-block; }
+        .btn-recognize { background: #007bff; color: white; }
+        .btn-delete { background: #dc3545; color: white; }
+        .btn-delete:hover { background: #c82333; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Библиотека шаблонов распознавания</h2>
+    <a href="/templates/editor" class="btn btn-add">+ Создать новый шаблон</a>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Название</th>
+            <th>Размер базы (px)</th>
+            <th>Полей</th>
+            <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody id="templates-table">
+        <!-- Заполнится через JS -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    async function loadTemplates() {
+        const response = await fetch('/api/templates');
+        const templates = await response.json();
+        const tbody = document.getElementById('templates-table');
+        tbody.innerHTML = '';
+
+        templates.forEach(t => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${t.name}</b></td>
+                    <td>${t.baseWidth} x ${t.baseHeight}</td>
+                    <td>${t.entries ? t.entries.length : 0}</td>
+                    <td>
+                        <a href="/templates/recognize/${t.id}" class="btn btn-recognize">Распознать документ</a>
+                        <button onclick="deleteTemplate('${t.id}')" class="btn btn-delete">Удалить</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    async function deleteTemplate(id) {
+        if (confirm('Вы уверены, что хотите удалить этот шаблон?')) {
+            await fetch(`/api/templates/${id}`, { method: 'DELETE' });
+            loadTemplates();
+        }
+    }
+
+    loadTemplates();
+</script>
+</body>
+</html>

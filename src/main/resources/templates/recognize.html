@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Распознавание документа</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; background: #f0f2f5; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; }
+        .upload-box { border: 2px dashed #007bff; padding: 40px; text-align: center; margin-bottom: 20px; border-radius: 8px; }
+        #results { margin-top: 30px; display: none; }
+        .result-item { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .field-name { font-weight: bold; color: #555; }
+        .field-value { color: #000; font-size: 1.1em; }
+        img.signature-preview { max-height: 80px; border: 1px solid #ccc; }
+        .loader { display: none; color: #007bff; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a href="/templates" style="text-decoration: none; color: #666;">← Назад к списку</a>
+    <h2 id="header">Загрузка документа</h2>
+
+    <div class="upload-box">
+        <input type="file" id="fileInput" accept="image/*"><br><br>
+        <button onclick="process()" id="btnProcess" style="background: #007bff; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer;">
+            Начать распознавание
+        </button>
+        <p id="loader" class="loader">Обработка... Пожалуйста, подождите.</p>
+    </div>
+
+    <div id="results">
+        <h3>Результаты распознавания:</h3>
+        <div id="results-list"></div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const templateId = [[${templateId}]];
+
+    async function process() {
+        const fileInput = document.getElementById('fileInput');
+        if (!fileInput.files[0]) return alert("Выберите файл!");
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+        formData.append("templateId", templateId);
+
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('btnProcess').disabled = true;
+
+        try {
+            const response = await fetch('/api/recognition/process', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            showResults(data);
+        } catch (e) {
+            alert("Ошибка при обработке");
+        } finally {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('btnProcess').disabled = false;
+        }
+    }
+
+    function showResults(data) {
+        const list = document.getElementById('results-list');
+        const resultsDiv = document.getElementById('results');
+        list.innerHTML = '';
+        resultsDiv.style.display = 'block';
+
+        data.fields.forEach(f => {
+            let valueHtml = '';
+            if (f.type === 'SIGNATURE' && f.imageValue) {
+                // Отображаем картинку подписи из Base64
+                valueHtml = `<img src="data:image/jpeg;base64,${f.imageValue}" class="signature-preview">`;
+            } else {
+                valueHtml = `<span class="field-value">${f.textValue || '—'}</span>`;
+            }
+
+            list.innerHTML += `
+                <div class="result-item">
+                    <span class="field-name">${f.fieldName}</span>
+                    <div class="field-content">${valueHtml}</div>
+                </div>
+            `;
+        });
+    }
+</script>
+</body>
+</html>

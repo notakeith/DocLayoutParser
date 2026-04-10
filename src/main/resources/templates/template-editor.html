@@ -17,9 +17,20 @@
 <h2>Создание шаблона документа</h2>
 
 <div id="controls">
+    <a href="/templates" style="margin-right: 20px; color: #666; text-decoration: none;">← Назад</a>
     <input type="file" id="imageLoader" accept="image/*">
-    <input type="text" id="templateName" placeholder="Название шаблона (напр. Справка 1941)">
-    <button onclick="saveTemplate()" style="background: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer;">Сохранить шаблон</button>
+    <input type="text" id="templateName" placeholder="Название шаблона">
+    <button onclick="saveTemplate()" style="background: #28a745; color: white;">💾 Сохранить в БД</button>
+    <button onclick="clearDraft()" style="background: #6c757d; color: white;">🗑️ Сбросить черновик</button>
+</div>
+
+<!-- В сайдбаре добавим кнопку Undo -->
+<div class="sidebar">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3>Поля шаблона</h3>
+        <button onclick="undo()" style="padding: 5px; cursor: pointer;">↩️ Шаг назад</button>
+    </div>
+    <div id="entries-list"></div>
 </div>
 
 <div id="canvas-container">
@@ -100,33 +111,91 @@
         drawAll();
     };
 
+    // Конфигурация цветов для типов полей
+    const typeColors = {
+        'TEXT': '#007bff',      // Синий
+        'NUMERIC': '#28a745',   // Зеленый
+        'DATE': '#fd7e14',      // Оранжевый
+        'SIGNATURE': '#dc3545', // Красный
+        'ANCHOR': '#6f42c1'     // Фиолетовый
+    };
+
+    // Загрузка черновика при старте
+    window.onload = () => {
+        const draft = localStorage.getItem('template_draft');
+        if (draft) {
+            const data = JSON.parse(draft);
+            entries = data.entries || [];
+            document.getElementById('templateName').value = data.name || '';
+            renderEntries();
+        }
+    };
+
+    // Функция сохранения черновика
+    function saveDraft() {
+        const data = {
+            name: document.getElementById('templateName').value,
+            entries: entries
+        };
+        localStorage.setItem('template_draft', JSON.stringify(data));
+    }
+
+    function clearDraft() {
+        if(confirm("Очистить текущую разметку?")) {
+            entries = [];
+            localStorage.removeItem('template_draft');
+            renderEntries();
+            drawAll();
+        }
+    }
+
+    function undo() {
+        entries.pop();
+        renderEntries();
+        drawAll();
+        saveDraft();
+    }
+
+    // Обновим функцию рисования, чтобы она учитывала цвета
     function drawAll() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         entries.forEach(entry => {
-            ctx.strokeStyle = 'blue';
-            ctx.lineWidth = 2;
+            const color = typeColors[entry.type] || '#000';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
             ctx.strokeRect(entry.box.x/scale, entry.box.y/scale, entry.box.width/scale, entry.box.height/scale);
-            ctx.fillStyle = 'blue';
-            ctx.fillText(entry.name, entry.box.x/scale, (entry.box.y/scale) - 5);
+
+            // Подложка под текст
+            ctx.fillStyle = color;
+            ctx.fillRect(entry.box.x/scale, (entry.box.y/scale) - 20, ctx.measureText(entry.name).width + 10, 20);
+            ctx.fillStyle = 'white';
+            ctx.fillText(entry.name, (entry.box.x/scale) + 5, (entry.box.y/scale) - 5);
         });
     }
 
+    // Обновим рендер списка, чтобы можно было менять Padding
     function renderEntries() {
         const list = document.getElementById('entries-list');
         list.innerHTML = '';
         entries.forEach((entry, index) => {
             list.innerHTML += `
-                <div class="entry-row">
-                    <b>${entry.name}</b>
-                    <select onchange="entries[${index}].type = this.value">
-                        <option value="TEXT">TEXT</option>
-                        <option value="NUMERIC">NUMERIC</option>
-                        <option value="DATE">DATE</option>
-                        <option value="SIGNATURE">SIGNATURE</option>
-                    </select>
-                    <button onclick="entries.splice(${index},1); renderEntries(); drawAll();">❌</button>
+            <div class="entry-row" style="border-left: 5px solid ${typeColors[entry.type]}">
+                <div style="flex: 1">
+                    <input type="text" value="${entry.name}" onchange="entries[${index}].name=this.value; saveDraft(); drawAll();" style="width: 80%">
+                    <div style="font-size: 0.8em; color: #666; margin-top: 5px;">
+                        Тип:
+                        <select onchange="entries[${index}].type = this.value; saveDraft(); drawAll(); renderEntries();">
+                            ${Object.keys(typeColors).map(t => `<option value="${t}" ${entry.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+                        </select>
+                        Отступ (px):
+                        <input type="number" value="${entry.padding}" style="width: 40px" onchange="entries[${index}].padding=parseInt(this.value); saveDraft();">
+                    </div>
                 </div>
-            `;
+                <button onclick="entries.splice(${index},1); renderEntries(); drawAll(); saveDraft();">❌</button>
+            </div>
+        `;
         });
+        saveDraft(); // Сохраняем черновик при любом изменении списка
     }
 
     async function saveTemplate() {

@@ -31,4 +31,8 @@ public class TemplateService {
     public Template getById(UUID id) {
         return repository.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
     }
+
+    public void deleteTemplate(UUID id) {
+        repository.deleteById(id);
+    }
 }

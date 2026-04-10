@@ -7,6 +7,7 @@ import org.sparklingduo.domain.template.Template;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/templates")
@@ -22,5 +23,10 @@ public class TemplateController {
     @GetMapping
     public List<Template> list() {
         return templateService.getAllTemplates();
+    }
+
+    @DeleteMapping(value = "/delete/{id}")
+    public void delete(@PathVariable UUID id) {
+        templateService.deleteTemplate(id);
     }
 }

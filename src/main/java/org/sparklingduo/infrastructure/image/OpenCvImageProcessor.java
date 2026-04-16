@@ -22,22 +22,7 @@ public class OpenCvImageProcessor implements ImageProcessor {
 
     @Override
     public byte[] prepare(byte[] imageContent) {
-        Mat src = Imgcodecs.imdecode(new MatOfByte(imageContent), Imgcodecs.IMREAD_GRAYSCALE);
-        Mat dest = new Mat();
-
-        // 1. Увеличение резкости (Optional)
-        // 2. Бинаризация (Самое важное!)
-        // Используем Adaptive Thresholding, чтобы убрать тени и пятна бумаги
-        Imgproc.adaptiveThreshold(src, dest, 255,
-                Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-                Imgproc.THRESH_BINARY, 15, 10);
-
-        // 3. Удаление мелкого шума (Denoising)
-        Imgproc.medianBlur(dest, dest, 1);
-
-        MatOfByte buffer = new MatOfByte();
-        Imgcodecs.imencode(".jpg", dest, buffer);
-        return buffer.toArray();
+        return imageContent;
     }
 
     @Override

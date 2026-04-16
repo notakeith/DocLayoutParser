@@ -28,6 +28,7 @@ app:
   ocr:
     tessdata-path: "src/main/resources/tessdata"
     language: "rus"
-    pageSegMode: 7
+    pageSegMode: 6
+    paddle-url: "http://localhost:5000/recognize"
   image:
     target-width: 2000

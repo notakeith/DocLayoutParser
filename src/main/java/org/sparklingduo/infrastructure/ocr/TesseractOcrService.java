@@ -33,11 +33,9 @@ public class TesseractOcrService implements OcrProvider {
 
         URL resource = getClass().getClassLoader().getResource("tessdata");
         if (resource != null) {
-            // Конвертируем URL в путь к папке
             String path = new File(resource.toURI()).getAbsolutePath();
             tesseract.setDatapath(path);
         } else {
-            // Если не нашли в classpath, берем из конфига (запасной вариант)
             tesseract.setDatapath(appProperties.getOcr().getTessdataPath());
         }
 

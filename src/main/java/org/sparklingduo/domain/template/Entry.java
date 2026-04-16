@@ -21,7 +21,7 @@ public class Entry {
     @Enumerated(EnumType.STRING)
     private FieldType type;
 
-    private int padding; // а-ля допуск, а то я чего-то не подумал что всё поплыть может в зависимости от того кто какую фотку загрузит...
+    private int padding;
 
     @Embedded
     private Box box;

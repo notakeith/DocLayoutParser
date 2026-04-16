@@ -5,7 +5,7 @@ public enum FieldType {
     NUMERIC,
     DATE,
     PHONE,
-    HANDWRITTEN, // это рукописный текст, возвращаемый объект - string
-    SIGNATURE, // подпись, возвращаемый объект - byte[]
-    ANCHOR // закос под будущее...
+    HANDWRITTEN,
+    SIGNATURE,
+    ANCHOR
 }

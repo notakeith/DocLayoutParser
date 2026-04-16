@@ -55,13 +55,13 @@ dependencies {
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
 
-    // JSON (нужно ли?...)
+    // JSON
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
-    // Tesseract (Библиотека для распознавания текста... но только машиночитаемого? рукописный потом будет через питончик видимо)
+    // Tesseract
     implementation 'net.sourceforge.tess4j:tess4j:5.10.0'
 
-    // OpenCV (Библиотека для подготовки фоток... подгонка/обрезка/покраска...)
+    // OpenCV
     implementation 'org.openpnp:opencv:4.9.0-0'
 }
 
@@ -69,12 +69,9 @@ test {
     useJUnitPlatform()
 }
 
-// 1. Определяем место для хранения скачанных данных вне стандартных путей
 def generatedResDir = layout.buildDirectory.dir("generated-resources-tess")
 
-// 2. Регистрируем задачу скачивания
 tasks.register('downloadTessData') {
-    // Явно указываем Gradle, что эта задача управляет этой папкой
     outputs.dir(generatedResDir)
 
     doLast {
@@ -91,9 +88,6 @@ tasks.register('downloadTessData') {
     }
 }
 
-// 3. Настраиваем сборку ресурсов
 processResources {
-    // Говорим задаче processResources: "Возьми всё, что создала задача downloadTessData"
-    // Gradle сам поймет, что нужно сначала запустить скачивание
     from(downloadTessData)
 }

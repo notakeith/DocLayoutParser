@@ -12,7 +12,7 @@ import java.util.UUID;
 @RequestMapping("/templates")
 public class ViewController {
 
-    @GetMapping // Главная страница со списком
+    @GetMapping
     public String list() {
         return "template-list";
     }

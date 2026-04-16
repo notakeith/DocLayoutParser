@@ -71,7 +71,6 @@
         data.fields.forEach(f => {
             let valueHtml = '';
             if (f.type === 'SIGNATURE' && f.imageValue) {
-                // Отображаем картинку подписи из Base64
                 valueHtml = `<img src="data:image/jpeg;base64,${f.imageValue}" class="signature-preview">`;
             } else {
                 valueHtml = `<span class="field-value">${f.textValue || '—'}</span>`;

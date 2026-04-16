@@ -33,7 +33,6 @@ public class GlobalExceptionHandler {
         return createResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    // Обработка стандартных ошибок Spring (валидация, битые JSON и т.д.)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex) {
         return createResponse("An unexpected error occurred: " + ex.getMessage(),
@@ -49,6 +48,5 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, status);
     }
 
-    // DTO для ответа об ошибке
     public record ErrorResponse(int status, String message, LocalDateTime timestamp) {}
 }

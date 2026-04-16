@@ -14,16 +14,14 @@ public class AppProperties {
 
     @Data
     public static class Ocr {
-        // Путь к папке с обученными данными (rus.traineddata)
         private String tessdataPath;
-        // Язык (по умолчанию rus)
         private String language = "rus";
         private Integer pageSegMode = 7;
+        private String paddleUrl;
     }
 
     @Data
     public static class Image {
-        // Ширина, к которой приводим все документы перед кропом
         private int targetWidth = 2000;
     }
 }

@@ -44,7 +44,7 @@ public class RecognitionController {
 
         DocumentImage image = new DocumentImage(
                 file.getBytes(),
-                ImageFormat.JPEG, // Можно добавить логику определения формата из file.getContentType()
+                ImageFormat.JPEG,
                 file.getOriginalFilename()
         );
 

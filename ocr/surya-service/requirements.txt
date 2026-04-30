@@ -1,0 +1,3 @@
+surya-ocr
+fastapi
+uvicorn

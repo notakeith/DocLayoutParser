@@ -1,89 +1,634 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Распознавание документа</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Анализ Документа | SparklingDuo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&display=swap">
     <style>
-        body { font-family: sans-serif; padding: 40px; background: #f0f2f5; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; }
-        .upload-box { border: 2px dashed #007bff; padding: 40px; text-align: center; margin-bottom: 20px; border-radius: 8px; }
-        #results { margin-top: 30px; display: none; }
-        .result-item { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .field-name { font-weight: bold; color: #555; }
-        .field-value { color: #000; font-size: 1.1em; }
-        img.signature-preview { max-height: 80px; border: 1px solid #ccc; }
-        .loader { display: none; color: #007bff; font-weight: bold; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper: #F4F2EF;
+            --ink: #1E2A32;        /* глубокий slate / «чернильный» — главный тон как у "Распознавание" */
+            --ink-soft: #2C3E4E;
+            --border: #C9D1D6;
+            --accent: #2C3E4E;      /* убираем коричневый, используем холодный slate */
+            --accent-glow: rgba(44, 62, 78, 0.2);
+            --low-conf: #DCE5EC;     /* нежно-голубоватый вместо бежевого */
+            --shimmer-start: rgba(30, 42, 50, 0.0);
+            --shimmer-end: rgba(44, 62, 78, 0.35);
+            --hover-bg-start: #E9EDF2;
+            --hover-bg-end: #D9E2EC;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            margin: 0;
+            padding: 36px 20px;
+            line-height: 1.5;
+            transition: background 0.4s ease;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        @keyframes claudeShimmer {
+            0% {
+                background-position: -200% 0;
+                background-size: 200% 100%;
+                color: var(--ink);
+                opacity: 0.7;
+            }
+            40% {
+                color: #1e1e1e;
+            }
+            70% {
+                background-position: 200% 0;
+                color: #000;
+            }
+            100% {
+                background-position: 200% 0;
+                color: var(--ink);
+                opacity: 1;
+            }
+        }
+
+        /* Анимация появления с переливом — для текстов полей результата */
+        .result-card .field-content {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        /* Переливающийся эффект при появлении карточки */
+        .shimmer-text {
+            background: linear-gradient(120deg,
+            var(--shimmer-start) 0%,
+            var(--shimmer-end) 40%,
+            var(--shimmer-start) 80%);
+            background-size: 200% 100%;
+            background-repeat: no-repeat;
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: var(--ink);
+            animation: shimmerReveal 0.9s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+            display: inline-block;
+            width: 100%;
+        }
+
+        @keyframes shimmerReveal {
+            0% {
+                background-position: -200% 0;
+                opacity: 0;
+                letter-spacing: -0.01em;
+                transform: translateY(6px);
+                filter: blur(0px);
+            }
+            20% {
+                opacity: 0.6;
+            }
+            60% {
+                background-position: 80% 0;
+                opacity: 1;
+                transform: translateY(0px);
+            }
+            100% {
+                background-position: 200% 0;
+                opacity: 1;
+                transform: translateY(0);
+                letter-spacing: normal;
+            }
+        }
+
+        /* Перелив для статусного текста (ИИ-подобный) */
+        .iridescent-status {
+            background: linear-gradient(135deg, #3a2618, #8B4513, #c07a4b, #e6c9a3, #8B4513);
+            background-size: 250% 100%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: flowingGradient 3s ease infinite;
+            font-weight: 500;
+        }
+
+        @keyframes flowingGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Заголовок с тонкой анимацией при загрузке страницы */
+        .report-header h1 {
+            font-family: 'EB Garamond', serif;
+            font-size: 42px;
+            font-weight: 500;
+            letter-spacing: -0.3px;
+            position: relative;
+            display: inline-block;
+            background: linear-gradient(120deg, var(--ink), #5e3a2b, var(--ink));
+            background-size: 200% auto;
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: gentleFlow 7s ease infinite;
+        }
+
+        @keyframes gentleFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Обычные стили компонентов */
+        .report-header {
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 50px;
+            padding-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .upload-card {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 42px 32px;
+            text-align: center;
+            border-radius: 20px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            transition: all 0.4s ease;
+        }
+
+        #imagePreview {
+            max-width: 220px;
+            margin: 20px auto;
+            display: none;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 6px;
+            background: white;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.05);
+        }
+
+        .processing-status {
+            display: none;
+            margin: 48px 0;
+            text-align: center;
+            backdrop-filter: blur(2px);
+        }
+
+        .claude-loader {
+            width: 48px;
+            height: 48px;
+            border: 2px solid rgba(139, 69, 19, 0.2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            animation: spin 1.2s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #statusText {
+            font-family: 'EB Garamond', serif;
+            font-size: 22px;
+            font-style: italic;
+            letter-spacing: -0.2px;
+            min-height: 3rem;
+            transition: all 0.2s;
+        }
+
+        /* Контейнер результатов */
+        .results-container {
+            display: none;
+            margin-top: 58px;
+        }
+
+        .result-card {
+            background: rgba(255, 253, 250, 0.96);
+            border: 1px solid var(--border);
+            padding: 28px 32px;
+            margin-bottom: 18px;
+            border-radius: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 24px;
+            opacity: 0;
+            transform: translateY(18px);
+            transition: all 0.2s;
+            box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.04);
+            backdrop-filter: blur(2px);
+        }
+
+        .result-card.show {
+            animation: cardRevealGlide 0.65s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+        }
+
+        @keyframes cardRevealGlide {
+            0% {
+                opacity: 0;
+                transform: translateY(24px);
+                filter: blur(2px);
+            }
+            40% {
+                opacity: 0.8;
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+                filter: blur(0);
+            }
+        }
+
+        .field-info {
+            width: 200px;
+            border-right: 1px solid #e2dbd2;
+            padding-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .field-name {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            color: #7a6a5c;
+            margin-bottom: 8px;
+        }
+
+        .field-type {
+            font-family: 'EB Garamond', serif;
+            font-style: italic;
+            color: var(--accent);
+            font-size: 14px;
+            opacity: 0.85;
+        }
+
+        .field-content {
+            flex-grow: 1;
+            font-family: 'EB Garamond', serif;
+            font-size: 24px;
+            font-weight: 450;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        low {
+            background-color: var(--low-conf);
+            padding: 0 4px;
+            border-radius: 12px;
+            border-bottom: 1px dashed var(--accent);
+            cursor: help;
+            transition: all 0.2s ease;
+            display: inline-block;
+            font-weight: 500;
+        }
+
+        low:hover {
+            background: linear-gradient(120deg, #f0e5d4, #ffe6c7);
+            background-size: 200% 100%;
+            animation: lowShine 0.4s ease;
+        }
+
+        @keyframes lowShine {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 0%; }
+        }
+
+        low:hover::after {
+            content: "Уверенность: " attr(confidence);
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--ink);
+            color: #f2e8de;
+            padding: 6px 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 400;
+            white-space: nowrap;
+            border-radius: 40px;
+            z-index: 120;
+            box-shadow: 0 10px 18px rgba(0,0,0,0.15);
+            letter-spacing: 0.3px;
+            backdrop-filter: blur(2px);
+        }
+
+        low:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--ink);
+        }
+
+        .signature-box {
+            display: inline-block;
+            padding: 8px 12px;
+            background: #FFFBF5;
+            border-radius: 16px;
+            border: 1px solid #ece1d4;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.02));
+        }
+
+        .signature-box img {
+            max-height: 80px;
+            display: block;
+            border-radius: 6px;
+        }
+
+        .btn-main {
+            background: var(--ink);
+            color: var(--paper);
+            border: none;
+            padding: 14px 36px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            border-radius: 48px;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .btn-main:hover {
+            background: #3d2b1f;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -8px rgba(0,0,0,0.2);
+            letter-spacing: 2.2px;
+        }
+
+        .fade-transition {
+            transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 1;
+        }
+
+        .fade-out {
+            opacity: 0;
+        }
+
+        a {
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-block;
+            margin-bottom: 8px;
+            color: #6c5c4e;
+        }
+
+        a:hover {
+            color: var(--accent);
+            transform: translateX(-3px);
+        }
+
+        @media (max-width: 680px) {
+            .result-card {
+                flex-direction: column;
+            }
+            .field-info {
+                width: 100%;
+                border-right: 0;
+                border-bottom: 1px solid #e2dbd2;
+                padding-bottom: 12px;
+                margin-bottom: 16px;
+            }
+            .field-content {
+                font-size: 20px;
+            }
+        }
     </style>
 </head>
 <body>
+
 <div class="container">
-    <a href="/templates" style="text-decoration: none; color: #666;">← Назад к списку</a>
-    <h2 id="header">Загрузка документа</h2>
+    <a href="/templates" style="font-family: 'Inter';">← К РЕЕСТРУ АРХИВА</a>
 
-    <div class="upload-box">
-        <input type="file" id="fileInput" accept="image/*"><br><br>
-        <button onclick="process()" id="btnProcess" style="background: #007bff; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer;">
-            Начать распознавание
-        </button>
-        <p id="loader" class="loader">Обработка... Пожалуйста, подождите.</p>
+    <div class="report-header">
+        <h1>Распознавание</h1>
+        <div style="text-align: right; font-size: 11px; color: #a39282;">
+            ТЕХНОЛОГИЯ SPARKLINGDUO<br>
+            ID: <span th:text="${templateId}" id="templateIdSpan"></span>
+        </div>
     </div>
 
-    <div id="results">
-        <h3>Результаты распознавания:</h3>
-        <div id="results-list"></div>
+    <div class="upload-card" id="uploadCard">
+        <input type="file" id="fileInput" accept="image/*" onchange="previewFile()" style="display: none;">
+        <label for="fileInput" class="btn-main" style="display: inline-block; margin-bottom: 20px; cursor: pointer;">Выбрать образ</label>
+        <img id="imagePreview" alt="Предпросмотр">
+        <div id="actionBtn" style="display: none;">
+            <button class="btn-main" onclick="processDocument()" style="margin-top: 14px;">Запустить анализ</button>
+        </div>
+        <div style="margin-top: 24px; font-size: 12px; color: #b49b84;">Поддержка JPG, PNG</div>
     </div>
+
+    <div class="processing-status" id="statusArea">
+        <div class="claude-loader"></div>
+        <div id="statusText" class="iridescent-status">Инициализация когнитивного движка...</div>
+    </div>
+
+    <div id="resultsContainer" class="results-container"></div>
 </div>
 
 <script th:inline="javascript">
     const templateId = [[${templateId}]];
+    const statuses = [
+        "Загрузка образа в память...",
+        "Коррекция перспективы и теней...",
+        "Очистка цифрового пергамента",
+        "Наложение координатной сетки...",
+        "Извлечение чернильных слоёв...",
+        "Сверка со словарями...",
+        "Финальная сборка данных..."
+    ];
 
-    async function process() {
+    function previewFile() {
+        const file = document.getElementById('fileInput').files[0];
+        const preview = document.getElementById('imagePreview');
+        const btnDiv = document.getElementById('actionBtn');
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                btnDiv.style.display = 'block';
+                preview.style.animation = 'shimmerReveal 0.5s ease';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function displayResults(data) {
+        const container = document.getElementById('resultsContainer');
+        container.style.display = 'block';
+        container.innerHTML = '';
+
+        if (!data.fields || data.fields.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'result-card';
+            emptyMsg.innerHTML = `<div class="field-content" style="text-align:center;">✨ Распознанные поля отсутствуют ✨</div>`;
+            container.appendChild(emptyMsg);
+            setTimeout(() => emptyMsg.classList.add('show'), 50);
+            return;
+        }
+
+        data.fields.forEach((field, idx) => {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+
+            let contentHtml = '';
+            if (field.type === 'SIGNATURE' && field.imageValue) {
+                contentHtml = `<div class="signature-box shimmer-text" style="display:inline-block; animation: shimmerReveal 0.7s ease forwards;"><img src="data:image/jpeg;base64,${field.imageValue}" alt="Подпись"></div>`;
+            } else {
+                let rawText = field.textValue || '<span style="opacity:0.5; font-style:italic;">— не распознано —</span>';
+
+                let processed = rawText;
+
+                contentHtml = `<span class="shimmer-text">${processed}</span>`;
+            }
+
+            card.innerHTML = `
+            <div class="field-info">
+                <div class="field-name">${escapeHtml(field.fieldName || 'Поле')}</div>
+                <div class="field-type">${escapeHtml(field.fieldType || 'тип')}</div>
+            </div>
+            <div class="field-content">
+                ${contentHtml}
+            </div>
+        `;
+            container.appendChild(card);
+
+            setTimeout(() => {
+                card.classList.add('show');
+                const shimmerSpan = card.querySelector('.shimmer-text');
+                if (shimmerSpan) {
+                    shimmerSpan.style.animation = 'none';
+                    shimmerSpan.offsetHeight;
+                    shimmerSpan.style.animation = 'shimmerReveal 0.85s cubic-bezier(0.2,0.9,0.4,1.1) forwards';
+                }
+            }, idx * 160);
+        });
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+
+    async function processDocument() {
         const fileInput = document.getElementById('fileInput');
-        if (!fileInput.files[0]) return alert("Выберите файл!");
+        const statusArea = document.getElementById('statusArea');
+        const statusTextElem = document.getElementById('statusText');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const uploadCard = document.getElementById('uploadCard');
+
+        if (!fileInput.files[0]) {
+            alert("Пожалуйста, выберите изображение документа.");
+            return;
+        }
 
         const formData = new FormData();
         formData.append("file", fileInput.files[0]);
         formData.append("templateId", templateId);
 
-        document.getElementById('loader').style.display = 'block';
-        document.getElementById('btnProcess').disabled = true;
+        uploadCard.style.transition = "opacity 0.5s ease, transform 0.3s";
+        uploadCard.style.opacity = "0";
+        setTimeout(() => {
+            uploadCard.style.display = 'none';
+            statusArea.style.display = 'block';
+            statusArea.classList.add('fade-transition');
+            statusArea.style.opacity = '1';
+        }, 450);
+
+        let statusIdx = 0;
+        let intervalRunning = true;
+
+        const updateStatusMessage = () => {
+            if (!intervalRunning) return;
+            statusTextElem.classList.add('fade-out');
+            setTimeout(() => {
+                if (!intervalRunning) return;
+                statusTextElem.innerText = statuses[statusIdx % statuses.length];
+                statusTextElem.classList.remove('fade-out');
+                statusTextElem.classList.add('iridescent-status');
+                statusIdx++;
+            }, 280);
+        };
+
+        const statusInterval = setInterval(updateStatusMessage, 2600);
+        updateStatusMessage();
 
         try {
             const response = await fetch('/api/recognition/process', {
                 method: 'POST',
                 body: formData
             });
+
+            if (!response.ok) {
+                throw new Error(`Ошибка сервера: ${response.status}`);
+            }
+
             const data = await response.json();
-            showResults(data);
-        } catch (e) {
-            alert("Ошибка при обработке");
-        } finally {
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('btnProcess').disabled = false;
+
+            clearInterval(statusInterval);
+            intervalRunning = false;
+
+            statusArea.classList.add('fade-out');
+            setTimeout(() => {
+                statusArea.style.display = 'none';
+                displayResults(data);
+            }, 550);
+
+        } catch (err) {
+            clearInterval(statusInterval);
+            intervalRunning = false;
+            console.error(err);
+            statusTextElem.innerText = "⚠️ Ошибка при обработке. Перезагрузите страницу и попробуйте снова.";
+            statusTextElem.style.color = "#a13e3e";
+            setTimeout(() => {
+                alert("Не удалось завершить анализ. Проверьте соединение или формат файла.");
+                location.reload();
+            }, 1800);
         }
     }
 
-    function showResults(data) {
-        const list = document.getElementById('results-list');
-        const resultsDiv = document.getElementById('results');
-        list.innerHTML = '';
-        resultsDiv.style.display = 'block';
-
-        data.fields.forEach(f => {
-            let valueHtml = '';
-            if (f.type === 'SIGNATURE' && f.imageValue) {
-                valueHtml = `<img src="data:image/jpeg;base64,${f.imageValue}" class="signature-preview">`;
-            } else {
-                valueHtml = `<span class="field-value">${f.textValue || '—'}</span>`;
-            }
-
-            list.innerHTML += `
-                <div class="result-item">
-                    <span class="field-name">${f.fieldName}</span>
-                    <div class="field-content">${valueHtml}</div>
-                </div>
-            `;
-        });
-    }
+    window.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('.report-header h1');
+        if (title) {
+            title.style.animation = 'gentleFlow 8s infinite';
+        }
+        const backLink = document.querySelector('a');
+        if(backLink) backLink.style.transition = 'all 0.2s';
+    });
 </script>
 </body>
 </html>

@@ -1,34 +1,47 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Панель управления шаблонами</title>
+    <title>Архив Шаблонов | SparklingDuo</title>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; padding: 40px; background: #f8f9fa; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
-        .btn { padding: 8px 15px; border-radius: 5px; text-decoration: none; cursor: pointer; border: none; font-size: 14px; }
-        .btn-add { background: #28a745; color: white; margin-bottom: 20px; display: inline-block; }
-        .btn-recognize { background: #007bff; color: white; }
-        .btn-delete { background: #dc3545; color: white; }
-        .btn-delete:hover { background: #c82333; }
+        :root { --paper: #F7F3F0; --ink: #2C2C2C; --accent: #8B4513; --border: #D1CEC7; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--paper); color: var(--ink); margin: 0; padding: 50px; }
+        h1, h2, h3 { font-family: 'EB Garamond', serif; font-weight: 600; }
+
+        .container { max-width: 900px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--border); margin-bottom: 40px; padding-bottom: 10px; }
+
+        .btn { font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 1px; font-size: 11px; font-weight: 600;
+            padding: 10px 20px; border: 1px solid var(--ink); background: transparent; cursor: pointer; transition: 0.3s; text-decoration: none; color: var(--ink); }
+        .btn:hover { background: var(--ink); color: var(--paper); }
+        .btn-delete { border-color: #a33; color: #a33; }
+        .btn-delete:hover { background: #a33; color: white; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+        th { text-align: left; font-family: 'EB Garamond', serif; font-size: 18px; padding: 15px; border-bottom: 2px solid var(--ink); }
+        td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        tr:hover { background: rgba(0,0,0,0.02); }
+
+        .id-badge { font-family: monospace; font-size: 10px; color: #888; }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2>Библиотека шаблонов распознавания</h2>
-    <a href="/templates/editor" class="btn btn-add">+ Создать новый шаблон</a>
+    <div class="header">
+        <h1>Реестр Шаблонов</h1>
+        <a href="/templates/editor" class="btn">+ Новый Шаблон</a>
+    </div>
 
     <table>
         <thead>
         <tr>
-            <th>Название</th>
-            <th>Размер базы (px)</th>
-            <th>Полей</th>
-            <th>Действия</th>
+            <th>Наименование документа</th>
+            <th>Формат (px)</th>
+            <th style="text-align: center">Действия</th>
         </tr>
         </thead>
         <tbody id="templates-table">
+        <!-- Заполняется JS -->
         </tbody>
     </table>
 </div>
@@ -38,30 +51,27 @@
         const response = await fetch('/api/templates');
         const templates = await response.json();
         const tbody = document.getElementById('templates-table');
-        tbody.innerHTML = '';
-
-        templates.forEach(t => {
-            tbody.innerHTML += `
-                <tr>
-                    <td><b>${t.name}</b></td>
-                    <td>${t.baseWidth} x ${t.baseHeight}</td>
-                    <td>${t.entries ? t.entries.length : 0}</td>
-                    <td>
-                        <a href="/templates/recognize/${t.id}" class="btn btn-recognize">Распознать документ</a>
-                        <button onclick="deleteTemplate('${t.id}')" class="btn btn-delete">Удалить</button>
-                    </td>
-                </tr>
-            `;
-        });
+        tbody.innerHTML = templates.map(t => `
+            <tr>
+                <td>
+                    <div style="font-size: 16px; font-weight: 600;">${t.name}</div>
+                    <div class="id-badge">${t.id}</div>
+                </td>
+                <td>${t.baseWidth} × ${t.baseHeight}</td>
+                <td style="text-align: center;">
+                    <a href="/templates/recognize/${t.id}" class="btn">Распознать</a>
+                    <button onclick="deleteTemplate('${t.id}')" class="btn btn-delete" style="margin-left: 10px;">Удалить</button>
+                </td>
+            </tr>
+        `).join('');
     }
 
     async function deleteTemplate(id) {
-        if (confirm('Вы уверены, что хотите удалить этот шаблон?')) {
+        if (confirm('Архивный файл будет удален безвозвратно. Продолжить?')) {
             await fetch(`/api/templates/${id}`, { method: 'DELETE' });
             loadTemplates();
         }
     }
-
     loadTemplates();
 </script>
 </body>

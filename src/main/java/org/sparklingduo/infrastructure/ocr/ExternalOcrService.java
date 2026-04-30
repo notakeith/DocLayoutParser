@@ -23,7 +23,7 @@ import java.util.Map;
 @Primary
 @RequiredArgsConstructor
 @Slf4j
-public class PaddleOcrService implements OcrProvider {
+public class ExternalOcrService implements OcrProvider {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -53,7 +53,7 @@ public class PaddleOcrService implements OcrProvider {
                 return (String) response.getBody().get("text");
             }
         } catch (Exception e) {
-            log.error("PaddleOCR Error: {}", e.getMessage());
+            log.error("ExternalOcrService Error: {}", e.getMessage());
         }
         return "";
     }

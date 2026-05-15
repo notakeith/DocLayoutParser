@@ -40,7 +40,7 @@ public class RecognitionController {
 
             @Parameter(description = "UUID существующего шаблона")
             @RequestParam("templateId") UUID templateId
-    ) throws IOException, URISyntaxException {
+    ) throws IOException, URISyntaxException, InterruptedException {
 
         DocumentImage image = new DocumentImage(
                 file.getBytes(),

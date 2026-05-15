@@ -26,9 +26,20 @@ spring:
 
 app:
   ocr:
+    provider: ${OCR_PROVIDER:YANDEX}
     tessdata-path: "src/main/resources/tessdata"
     language: "rus"
     pageSegMode: 6
-    paddle-url: "http://localhost:5000/recognize"
+    paddle-url: ${SURYA_SERVICE_URL:http://localhost:5000/recognize}
+    yandex:
+      iam-token: ${YANDEX_OCR_IAM_TOKEN:}
+      api-key: ${YANDEX_OCR_API_KEY:}
+      folder-id: ${YANDEX_FOLDER_ID:}
+
+  llm:
+    enabled: ${USE_LLM_POST_PROCESSING:false}
+    api-key: ${YANDEX_LLM_API_KEY:}
+    model-id: ${YANDEX_LLM_PROMPT_ID:}
+
   image:
     target-width: 2000

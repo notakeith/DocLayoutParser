@@ -1,9 +1,22 @@
 FROM eclipse-temurin:17-jdk-jammy
 WORKDIR /app
-COPY . .
 
-RUN ./gradlew --no-daemon clean build
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY settings.gradle .
+
+RUN chmod +x gradlew
+
+RUN ./gradlew dependencies --no-daemon
+
+COPY src src
+
+RUN ./gradlew bootJar --no-daemon
+
+RUN mkdir -p /app/build/libs
+RUN cp $(find /app/build/libs -name "*.jar" ! -name "*-plain.jar") /app/app.jar || true
 
 EXPOSE 8080
 
-CMD java -cp "build/classes/java/main" org.sparklingduo.App
+CMD ["java", "-jar", "/app/app.jar"]

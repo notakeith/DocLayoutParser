@@ -57,4 +57,9 @@ public class ExternalOcrService implements OcrProvider {
         }
         return "";
     }
+
+    @Override
+    public boolean supports(String providerName) {
+        return "EXTERNAL".equalsIgnoreCase(providerName);
+    }
 }

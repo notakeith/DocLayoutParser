@@ -15,47 +15,47 @@ services:
     networks:
       - app-network
 
-  surya-ocr:
-    build:
-      context: ./ocr/surya-service
-      dockerfile: Dockerfile
-    ports:
-      - "5000:5000"
-    environment:
-      - LLM_URL=http://llm-service:5001
-      - LLM_ENABLED=1
-    volumes:
-      - surya_cache:/root/.cache
-      - paddle_data:/root/.paddleocr
-    networks:
-      - app-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  llm-service:
-    build:
-      context: ./ocr/llm-service
-      dockerfile: Dockerfile
-    ports:
-      - "5001:5001"
-    environment:
-      - LLM_MODEL=mlx-community/Qwen2.5-7B-Instruct-4bit
-    volumes:
-      - llm_cache:/root/.cache
-    networks:
-      - app-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+#  surya-ocr:
+#    build:
+#      context: ./ocr/surya-service
+#      dockerfile: Dockerfile
+#    ports:
+#      - "5000:5000"
+#    environment:
+#      - LLM_URL=http://llm-service:5001
+#      - LLM_ENABLED=1
+#    volumes:
+#      - surya_cache:/root/.cache
+#      - paddle_data:/root/.paddleocr
+#    networks:
+#      - app-network
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 3
+#      start_period: 40s
+#
+#  llm-service:
+#    build:
+#      context: ./ocr/llm-service
+#      dockerfile: Dockerfile
+#    ports:
+#      - "5001:5001"
+#    environment:
+#      - LLM_MODEL=mlx-community/Qwen2.5-7B-Instruct-4bit
+#    volumes:
+#      - llm_cache:/root/.cache
+#    networks:
+#      - app-network
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 3
+#      start_period: 60s
 
   app:
     build:
@@ -64,10 +64,6 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      surya-ocr:
-        condition: service_healthy
-      llm-service:
-        condition: service_healthy
       db:
         condition: service_started
     environment:
@@ -79,6 +75,8 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    env_file:
+      - ../.env
 
 networks:
   app-network:

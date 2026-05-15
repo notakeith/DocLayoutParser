@@ -65,4 +65,9 @@ public class TesseractOcrService implements OcrProvider {
             default -> cleanText;
         };
     }
+
+    @Override
+    public boolean supports(String providerName) {
+        return "TESSERACT".equalsIgnoreCase(providerName);
+    }
 }

@@ -12,7 +12,9 @@ import org.sparklingduo.domain.template.Box;
 import org.sparklingduo.domain.template.Entry;
 import org.sparklingduo.domain.template.FieldType;
 import org.sparklingduo.domain.template.Template;
+import org.sparklingduo.infrastructure.config.AppProperties;
 import org.sparklingduo.infrastructure.image.OpenCvImageProcessor;
+import org.sparklingduo.infrastructure.llm.LlmCorrectionService;
 import org.sparklingduo.infrastructure.ocr.TesseractOcrService;
 import org.sparklingduo.repository.TemplateRepository;
 import org.springframework.stereotype.Service;
@@ -26,37 +28,53 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class RecognitionService {
-
-    private final ImageProcessor imageProcessor;
-    private final OcrProvider ocrProvider;
     private final TemplateRepository templateRepository;
+    private final ImageProcessor imageProcessor;
+    private final List<OcrProvider> ocrProviders;
+    private final LlmCorrectionService llmService;
+    private final AppProperties appProperties;
 
-    public DocumentData recognize(DocumentImage image, UUID templateId) throws URISyntaxException {
+    // Добавили InterruptedException в сигнатуру
+    public DocumentData recognize(DocumentImage image, UUID templateId) throws URISyntaxException, InterruptedException {
         Template template = templateRepository.findById(templateId)
-                .orElseThrow(() -> new TemplateNotFoundException("Template with ID " + templateId + " not found."));
+                .orElseThrow(() -> new TemplateNotFoundException(templateId.toString()));
 
         byte[] preparedImage = imageProcessor.prepare(image.content());
-
-        ImageProcessor.ImageSize currentSize = imageProcessor.getSize(preparedImage);
+        var currentSize = imageProcessor.getSize(preparedImage);
 
         double scaleX = (double) currentSize.width() / template.getBaseWidth();
         double scaleY = (double) currentSize.height() / template.getBaseHeight();
+
+        OcrProvider ocrProvider = ocrProviders.stream()
+                .filter(p -> p.supports(appProperties.getOcr().getProvider()))
+                .findFirst()
+                .orElse(ocrProviders.get(0));
 
         List<FieldValue> results = new ArrayList<>();
 
         for (Entry entry : template.getEntries()) {
             Box scaledBox = scaleBox(entry.getBox(), scaleX, scaleY, entry.getPadding());
-
             byte[] crop = imageProcessor.crop(preparedImage, scaledBox);
 
             if (entry.getType() == FieldType.SIGNATURE) {
                 results.add(FieldValue.ofSignature(entry.getName(), crop));
             } else {
+                // 1. Получаем сырой текст
                 String text = ocrProvider.extractText(crop, entry.getType());
+
+                // Ждем 1 секунду после OCR, так как у Яндекса лимит 1 RPS
+
+                // 2. Прогоняем через LLM только если текст НЕ пустой
+                if (appProperties.getLlm().isEnabled() && text != null && !text.isBlank()) {
+                    log.info("Отправка в LLM поля: {}", entry.getName());
+                    text = llmService.correctText(text);
+                }
+
+                Thread.sleep(1000);
+
                 results.add(FieldValue.ofTextual(entry.getName(), text, entry.getType()));
             }
         }
-
         return new DocumentData(template.getName(), results);
     }
 

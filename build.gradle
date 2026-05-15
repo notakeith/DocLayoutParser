@@ -63,6 +63,9 @@ dependencies {
 
     // OpenCV
     implementation 'org.openpnp:opencv:4.9.0-0'
+
+    // OpenAI
+    implementation("com.openai:openai-java:4.35.0")
 }
 
 test {

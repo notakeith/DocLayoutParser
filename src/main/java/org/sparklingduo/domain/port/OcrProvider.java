@@ -6,4 +6,6 @@ import java.net.URISyntaxException;
 
 public interface OcrProvider {
     String extractText(byte[] imageContent, FieldType type) throws URISyntaxException;
+
+    boolean supports(String providerName);
 }

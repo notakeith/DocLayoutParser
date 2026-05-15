@@ -1,77 +1,658 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
-    <title>Архив Шаблонов | SparklingDuo</title>
-    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Реестр шаблонов | SparklingDuo</title>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/_shared.css}">
     <style>
-        :root { --paper: #F7F3F0; --ink: #2C2C2C; --accent: #8B4513; --border: #D1CEC7; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--paper); color: var(--ink); margin: 0; padding: 50px; }
-        h1, h2, h3 { font-family: 'EB Garamond', serif; font-weight: 600; }
+        body { min-height: 100vh; }
 
-        .container { max-width: 900px; margin: auto; }
-        .header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--border); margin-bottom: 40px; padding-bottom: 10px; }
+        .page {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 56px 32px 80px;
+        }
 
-        .btn { font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 1px; font-size: 11px; font-weight: 600;
-            padding: 10px 20px; border: 1px solid var(--ink); background: transparent; cursor: pointer; transition: 0.3s; text-decoration: none; color: var(--ink); }
-        .btn:hover { background: var(--ink); color: var(--paper); }
-        .btn-delete { border-color: #a33; color: #a33; }
-        .btn-delete:hover { background: #a33; color: white; }
+        .hero {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 32px;
+            padding-bottom: 28px;
+            margin-bottom: 36px;
+            border-bottom: 1px solid var(--border);
+        }
+        .hero-titles { flex-grow: 1; min-width: 0; }
+        .eyebrow {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--ink-mute);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .eyebrow::before {
+            content: '';
+            width: 28px;
+            height: 1px;
+            background: var(--ink-mute);
+        }
+        h1 {
+            font-family: var(--font-serif);
+            font-weight: 500;
+            font-size: 52px;
+            letter-spacing: -1px;
+            margin: 0;
+            line-height: 1.05;
+        }
+        h1 em {
+            font-style: italic;
+            color: var(--ink-mute);
+            font-weight: 400;
+        }
+        .hero-meta {
+            display: flex;
+            gap: 32px;
+            font-size: 12px;
+            color: var(--ink-mute);
+            margin-top: 18px;
+        }
+        .hero-meta b {
+            display: block;
+            font-family: var(--font-serif);
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 2px;
+        }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 30px; }
-        th { text-align: left; font-family: 'EB Garamond', serif; font-size: 18px; padding: 15px; border-bottom: 2px solid var(--ink); }
-        td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 14px; }
-        tr:hover { background: rgba(0,0,0,0.02); }
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+        .search {
+            flex-grow: 1;
+            position: relative;
+        }
+        .search svg {
+            position: absolute;
+            left: 14px; top: 50%;
+            transform: translateY(-50%);
+            width: 16px; height: 16px;
+            color: var(--ink-faint);
+            pointer-events: none;
+        }
+        .search input {
+            width: 100%;
+            padding: 12px 16px 12px 40px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            font-family: var(--font-sans);
+            font-size: 14px;
+            border-radius: var(--radius-pill);
+            outline: none;
+            transition: var(--transition);
+        }
+        .search input:focus { border-color: var(--ink); box-shadow: 0 0 0 4px var(--accent-glow); }
 
-        .id-badge { font-family: monospace; font-size: 10px; color: #888; }
+        .view-toggle {
+            display: flex;
+            background: var(--paper-soft);
+            border-radius: var(--radius-pill);
+            padding: 3px;
+            gap: 2px;
+        }
+        .view-toggle button {
+            border: none;
+            background: transparent;
+            padding: 7px 12px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            color: var(--ink-mute);
+            transition: var(--transition);
+            display: grid;
+            place-items: center;
+        }
+        .view-toggle button.active {
+            background: var(--surface);
+            color: var(--ink);
+            box-shadow: var(--shadow-xs);
+        }
+        .view-toggle svg { width: 14px; height: 14px; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 22px;
+            transition: var(--transition);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            min-height: 260px;
+        }
+        .card:hover {
+            border-color: var(--ink);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+        .card-preview {
+            aspect-ratio: 4 / 3;
+            background: var(--paper);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+        }
+        .card-preview .doc-mini {
+            width: 64%;
+            background: var(--surface);
+            box-shadow: var(--shadow-sm);
+            padding: 14px 10px;
+            border-radius: 4px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .card-preview .doc-mini::before {
+            content: '';
+            height: 6px;
+            width: 50%;
+            background: var(--ink);
+            border-radius: 2px;
+            margin-bottom: 4px;
+        }
+        .card-preview .doc-mini i {
+            height: 2.5px;
+            background: var(--border-strong);
+            border-radius: 2px;
+            display: block;
+        }
+        .card-preview .doc-mini i:nth-child(1) { width: 90%; }
+        .card-preview .doc-mini i:nth-child(2) { width: 70%; }
+        .card-preview .doc-mini i:nth-child(3) { width: 85%; }
+        .card-preview .doc-mini i.box {
+            background: transparent;
+            border: 1.5px dashed var(--accent);
+            border-radius: 2px;
+            height: 12px;
+            margin-top: 4px;
+        }
+        .card-preview .doc-mini i.box.sig { border-color: var(--signature); height: 18px; width: 50%; }
+        .card-preview.landscape .doc-mini {
+            width: 76%;
+            aspect-ratio: 1.41 / 1;
+        }
+        .card-preview.portrait .doc-mini {
+            aspect-ratio: 1 / 1.41;
+        }
+
+        .card-body { flex-grow: 1; }
+        .card-name {
+            font-family: var(--font-serif);
+            font-size: 20px;
+            font-weight: 500;
+            line-height: 1.25;
+            margin: 0 0 10px;
+            letter-spacing: -0.2px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .card-meta {
+            display: flex;
+            gap: 14px;
+            font-size: 12px;
+            color: var(--ink-mute);
+            align-items: center;
+        }
+        .card-meta .dot { width: 3px; height: 3px; background: var(--ink-faint); border-radius: 50%; }
+        .card-id {
+            font-family: var(--font-mono);
+            font-size: 10.5px;
+            color: var(--ink-faint);
+            letter-spacing: 0.4px;
+        }
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+        }
+        .card-actions .btn { flex-grow: 1; justify-content: center; }
+        .card-actions .icon-btn {
+            flex-grow: 0;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            color: var(--ink-mute);
+            transition: var(--transition);
+        }
+        .card-actions .icon-btn:hover { color: var(--danger); border-color: var(--danger); }
+        .card-actions .icon-btn svg { width: 14px; height: 14px; display: block; }
+
+        .table-wrap {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            text-align: left;
+            font-size: 10.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--ink-mute);
+            padding: 16px 22px;
+            background: var(--paper);
+            border-bottom: 1px solid var(--border);
+        }
+        td {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            vertical-align: middle;
+        }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr { transition: var(--transition); }
+        tbody tr:hover { background: var(--paper); }
+        .row-name {
+            font-family: var(--font-serif);
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            letter-spacing: -0.1px;
+        }
+        .row-actions { display: flex; gap: 8px; justify-content: flex-end; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 10px;
+            background: var(--paper);
+            border-radius: var(--radius-pill);
+            font-size: 12px;
+            color: var(--ink-mute);
+            font-feature-settings: 'tnum';
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--paper-soft) 0%, var(--surface) 50%, var(--paper-soft) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s linear infinite;
+            border-radius: 4px;
+        }
+        @keyframes shimmer {
+            from { background-position: 100% 0; }
+            to { background-position: -100% 0; }
+        }
+        .skel-card {
+            min-height: 260px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .skel-card .skeleton:nth-child(1) { aspect-ratio: 4/3; }
+        .skel-card .skeleton:nth-child(2) { height: 22px; width: 80%; }
+        .skel-card .skeleton:nth-child(3) { height: 14px; width: 60%; }
+        .skel-card .skeleton:nth-child(4) { height: 38px; margin-top: auto; border-radius: 99px; }
+
+        .empty {
+            text-align: center;
+            padding: 80px 24px;
+            border: 1px dashed var(--border-strong);
+            border-radius: var(--radius-lg);
+            background: var(--surface);
+        }
+        .empty-mark {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: var(--paper-soft);
+            display: grid; place-items: center;
+            margin: 0 auto 18px;
+            color: var(--ink-mute);
+        }
+        .empty h3 {
+            font-family: var(--font-serif);
+            font-size: 24px;
+            margin: 0 0 8px;
+            font-weight: 500;
+        }
+        .empty p {
+            font-size: 14px;
+            color: var(--ink-mute);
+            margin: 0 0 24px;
+            max-width: 360px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .modal-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(20, 30, 40, 0.4);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            animation: fadeIn 200ms ease;
+        }
+        .modal-backdrop.open { display: flex; }
+        .modal {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            max-width: 440px;
+            width: calc(100% - 40px);
+            box-shadow: var(--shadow-lg);
+            animation: modalIn 280ms cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal h3 {
+            font-family: var(--font-serif);
+            font-size: 24px;
+            font-weight: 500;
+            margin: 0 0 8px;
+        }
+        .modal p { font-size: 14px; color: var(--ink-mute); margin: 0 0 24px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+        @media (max-width: 720px) {
+            h1 { font-size: 36px; }
+            .hero { flex-direction: column; align-items: stretch; }
+            .hero-meta { flex-wrap: wrap; gap: 18px; }
+            .page { padding: 32px 20px 60px; }
+            .grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="header">
-        <h1>Реестр Шаблонов</h1>
-        <a href="/templates/editor" class="btn">+ Новый Шаблон</a>
-    </div>
 
-    <table>
-        <thead>
-        <tr>
-            <th>Наименование документа</th>
-            <th>Формат (px)</th>
-            <th style="text-align: center">Действия</th>
-        </tr>
-        </thead>
-        <tbody id="templates-table">
-        <!-- Заполняется JS -->
-        </tbody>
-    </table>
+<div class="topbar">
+    <a href="/templates" class="brand">
+        <span class="brand-mark">S</span>
+        <span class="brand-name">Sparkling<span>Duo</span></span>
+    </a>
+    <nav class="topbar-nav">
+        <a href="/templates" class="active">Реестр</a>
+        <a href="/templates/editor">Конструктор</a>
+    </nav>
+    <div style="font-size: 12px; color: var(--ink-mute);">v 2.4</div>
 </div>
 
+<div class="page">
+
+    <div class="hero">
+        <div class="hero-titles">
+            <div class="eyebrow">Архив документов</div>
+            <h1>Реестр <em>шаблонов</em></h1>
+            <div class="hero-meta">
+                <div><b id="statTotal">—</b>всего шаблонов</div>
+                <div><b id="statFields">—</b>размеченных полей</div>
+                <div><b id="statLast">—</b>последнее обновление</div>
+            </div>
+        </div>
+        <a href="/templates/editor" class="btn btn-primary btn-lg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Новый шаблон
+        </a>
+    </div>
+
+    <div class="toolbar">
+        <div class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="searchInput" type="text" placeholder="Поиск по названию или ID…" autocomplete="off">
+        </div>
+        <select class="select" id="sortSelect" style="width: auto; padding-right: 36px; border-radius: 99px; background: var(--surface);">
+            <option value="recent">Сначала новые</option>
+            <option value="name">По названию</option>
+            <option value="fields">По числу полей</option>
+        </select>
+        <div class="view-toggle" role="tablist">
+            <button id="viewGrid" class="active" title="Сетка">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </button>
+            <button id="viewTable" title="Таблица">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <div id="content"></div>
+</div>
+
+<div class="modal-backdrop" id="confirmModal">
+    <div class="modal">
+        <h3>Удалить шаблон?</h3>
+        <p>Архивный файл «<span id="confirmName"></span>» будет удалён из реестра безвозвратно. Связанные результаты распознавания сохранятся.</p>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeConfirm()">Отмена</button>
+            <button class="btn btn-danger" id="confirmDelete">Удалить</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-host" id="toasts"></div>
+
 <script>
-    async function loadTemplates() {
-        const response = await fetch('/api/templates');
-        const templates = await response.json();
-        const tbody = document.getElementById('templates-table');
-        tbody.innerHTML = templates.map(t => `
-            <tr>
-                <td>
-                    <div style="font-size: 16px; font-weight: 600;">${t.name}</div>
-                    <div class="id-badge">${t.id}</div>
-                </td>
-                <td>${t.baseWidth} × ${t.baseHeight}</td>
-                <td style="text-align: center;">
-                    <a href="/templates/recognize/${t.id}" class="btn">Распознать</a>
-                    <button onclick="deleteTemplate('${t.id}')" class="btn btn-delete" style="margin-left: 10px;">Удалить</button>
-                </td>
-            </tr>
-        `).join('');
+    const $ = (s, p = document) => p.querySelector(s);
+    const state = { all: [], view: 'grid', sort: 'recent', q: '' };
+
+    function toast(msg, kind = '') {
+        const t = document.createElement('div');
+        t.className = 'toast ' + kind;
+        t.textContent = msg;
+        $('#toasts').appendChild(t);
+        setTimeout(() => {
+            t.style.animation = 'toastOut 240ms forwards';
+            setTimeout(() => t.remove(), 260);
+        }, 2600);
     }
 
-    async function deleteTemplate(id) {
-        if (confirm('Архивный файл будет удален безвозвратно. Продолжить?')) {
-            await fetch(`/api/templates/${id}`, { method: 'DELETE' });
-            loadTemplates();
+    function showSkeleton() {
+        const wrap = $('#content');
+        wrap.innerHTML = '<div class="grid">' + Array(6).fill('<div class="skel-card"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>').join('') + '</div>';
+    }
+
+    async function loadTemplates() {
+        showSkeleton();
+        try {
+            const r = await fetch('/api/templates');
+            state.all = await r.json();
+            updateStats();
+            render();
+        } catch (e) {
+            $('#content').innerHTML = '<div class="empty"><h3>Не удалось загрузить</h3><p>Проверьте соединение с сервером и обновите страницу.</p></div>';
         }
     }
+
+    function updateStats() {
+        const total = state.all.length;
+        const fields = state.all.reduce((s, t) => s + (t.entries?.length || 0), 0);
+        const dates = state.all.map(t => t.createdAt).filter(Boolean).sort();
+        const last = dates.length ? new Date(dates[dates.length - 1]).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '—';
+        $('#statTotal').textContent = total;
+        $('#statFields').textContent = fields;
+        $('#statLast').textContent = last;
+    }
+
+    function filteredSorted() {
+        let list = state.all.slice();
+        if (state.q) {
+            const q = state.q.toLowerCase();
+            list = list.filter(t => (t.name || '').toLowerCase().includes(q) || (t.id || '').toLowerCase().includes(q));
+        }
+        if (state.sort === 'name') list.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ru'));
+        else if (state.sort === 'fields') list.sort((a, b) => (b.entries?.length || 0) - (a.entries?.length || 0));
+        else list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+        return list;
+    }
+
+    function fmtDate(iso) {
+        if (!iso) return '';
+        try {
+            return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+        } catch { return iso; }
+    }
+
+    function previewClass(t) {
+        return (t.baseWidth > t.baseHeight) ? 'landscape' : 'portrait';
+    }
+
+    function miniDoc(t) {
+        const n = Math.min(t.entries?.length || 0, 4);
+        let boxes = '';
+        for (let i = 0; i < n; i++) {
+            boxes += `<i class="box ${i === n - 1 && n > 2 ? 'sig' : ''}"></i>`;
+        }
+        return `<div class="doc-mini"><i></i><i></i><i></i>${boxes}</div>`;
+    }
+
+    function renderGrid(list) {
+        return '<div class="grid">' + list.map(t => `
+            <article class="card">
+                <div class="card-preview ${previewClass(t)}">${miniDoc(t)}</div>
+                <div class="card-body">
+                    <h3 class="card-name">${escapeHtml(t.name)}</h3>
+                    <div class="card-meta">
+                        <span>${t.entries?.length || 0} полей</span>
+                        <span class="dot"></span>
+                        <span>${t.baseWidth}×${t.baseHeight}</span>
+                        ${t.createdAt ? `<span class="dot"></span><span>${fmtDate(t.createdAt)}</span>` : ''}
+                    </div>
+                    <div class="card-id" style="margin-top: 6px;">${t.id}</div>
+                </div>
+                <div class="card-actions">
+                    <a class="btn btn-primary" href="/templates/recognize/${t.id}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2Z"/></svg>
+                        Распознать
+                    </a>
+                    <button class="icon-btn" title="Удалить" data-action="delete" data-id="${t.id}" data-name="${escapeHtml(t.name)}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                    </button>
+                </div>
+            </article>
+        `).join('') + '</div>';
+    }
+
+    function renderTable(list) {
+        return `
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 45%">Документ</th>
+                            <th>Формат</th>
+                            <th>Полей</th>
+                            <th>Создан</th>
+                            <th style="text-align: right">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${list.map(t => `
+                            <tr>
+                                <td>
+                                    <div class="row-name">${escapeHtml(t.name)}</div>
+                                    <div class="card-id">${t.id}</div>
+                                </td>
+                                <td><span class="badge">${t.baseWidth} × ${t.baseHeight}</span></td>
+                                <td><span class="badge">${t.entries?.length || 0}</span></td>
+                                <td style="color: var(--ink-mute); font-size: 13px;">${fmtDate(t.createdAt) || '—'}</td>
+                                <td>
+                                    <div class="row-actions">
+                                        <a class="btn btn-sm" href="/templates/recognize/${t.id}">Распознать</a>
+                                        <button class="btn btn-sm btn-danger" data-action="delete" data-id="${t.id}" data-name="${escapeHtml(t.name)}">Удалить</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    function render() {
+        const list = filteredSorted();
+        const wrap = $('#content');
+        if (!list.length) {
+            wrap.innerHTML = `
+                <div class="empty">
+                    <div class="empty-mark">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                    </div>
+                    <h3>${state.q ? 'Ничего не найдено' : 'Пока пусто'}</h3>
+                    <p>${state.q ? 'Попробуйте изменить поисковый запрос или сбросить фильтры.' : 'Создайте первый шаблон, чтобы начать распознавание документов.'}</p>
+                    ${state.q ? '' : '<a class="btn btn-primary" href="/templates/editor">Создать шаблон</a>'}
+                </div>`;
+            return;
+        }
+        wrap.innerHTML = state.view === 'grid' ? renderGrid(list) : renderTable(list);
+        wrap.querySelectorAll('[data-action="delete"]').forEach(b => {
+            b.addEventListener('click', () => askDelete(b.dataset.id, b.dataset.name));
+        });
+    }
+
+    function escapeHtml(s) {
+        return (s || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+
+    let pendingDelete = null;
+    function askDelete(id, name) {
+        pendingDelete = id;
+        $('#confirmName').textContent = name;
+        $('#confirmModal').classList.add('open');
+    }
+    function closeConfirm() {
+        pendingDelete = null;
+        $('#confirmModal').classList.remove('open');
+    }
+    $('#confirmDelete').addEventListener('click', async () => {
+        if (!pendingDelete) return;
+        const id = pendingDelete;
+        closeConfirm();
+        try {
+            await fetch(`/api/templates/${id}`, { method: 'DELETE' });
+            state.all = state.all.filter(t => t.id !== id);
+            updateStats();
+            render();
+            toast('Шаблон удалён', 'success');
+        } catch (e) {
+            toast('Не удалось удалить', 'error');
+        }
+    });
+
+    $('#searchInput').addEventListener('input', (e) => { state.q = e.target.value; render(); });
+    $('#sortSelect').addEventListener('change', (e) => { state.sort = e.target.value; render(); });
+    $('#viewGrid').addEventListener('click', () => { state.view = 'grid'; $('#viewGrid').classList.add('active'); $('#viewTable').classList.remove('active'); render(); });
+    $('#viewTable').addEventListener('click', () => { state.view = 'table'; $('#viewTable').classList.add('active'); $('#viewGrid').classList.remove('active'); render(); });
+
     loadTemplates();
 </script>
 </body>

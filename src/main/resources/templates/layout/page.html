@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru"
+      th:fragment="layout(pageTitle, activeNav, extraCss, extraCss2)">
+<head th:replace="~{fragments/head :: head(${pageTitle}, ${extraCss}, ${extraCss2})}"></head>
+<body>
+
+<th:block th:replace="~{fragments/topbar :: topbar(${activeNav})}"></th:block>
+
+<th:block th:replace="~{::pageContent}"></th:block>
+
+<th:block th:replace="~{fragments/toasts :: toasts}"></th:block>
+
+<th:block th:replace="~{::pageScripts}"></th:block>
+
+</body>
+</html>

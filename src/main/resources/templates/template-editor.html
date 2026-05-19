@@ -1,599 +1,52 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Конструктор шаблона | SparklingDuo</title>
-    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/_shared.css}">
-    <style>
-        body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+<html xmlns:th="http://www.thymeleaf.org" lang="ru"
+      th:replace="~{layout/editor :: layout}">
 
-        .editor-topbar {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            padding: 14px 24px;
-            border-bottom: 1px solid var(--border);
-            background: var(--paper);
-            z-index: 30;
-        }
-        .editor-topbar .crumb {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 13px;
-            color: var(--ink-mute);
-            text-decoration: none;
-        }
-        .editor-topbar .crumb svg { width: 14px; height: 14px; }
-        .editor-topbar .crumb:hover { color: var(--ink); }
-        .editor-topbar .divider { width: 1px; height: 24px; background: var(--border); }
-        .doc-title-wrap { flex-grow: 1; }
-        .doc-title-input {
-            font-family: var(--font-serif);
-            font-size: 22px;
-            font-weight: 500;
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid transparent;
-            padding: 4px 8px;
-            margin-left: -8px;
-            width: 100%;
-            max-width: 520px;
-            outline: none;
-            color: var(--ink);
-            letter-spacing: -0.2px;
-            transition: var(--transition);
-        }
-        .doc-title-input:hover { border-bottom-color: var(--border); }
-        .doc-title-input:focus { border-bottom-color: var(--ink); }
-        .doc-title-input::placeholder { color: var(--ink-faint); font-style: italic; }
-
-        .save-state {
-            font-size: 12px;
-            color: var(--ink-faint);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .save-state .dot { width: 6px; height: 6px; background: var(--ink-faint); border-radius: 50%; }
-        .save-state.dirty .dot { background: #c9a13c; }
-        .save-state.saved .dot { background: var(--signature); }
-
-        .editor-layout {
-            flex-grow: 1;
-            display: flex;
-            min-height: 0;
-        }
-
-        .sidebar {
-            width: 380px;
-            border-right: 1px solid var(--border);
-            background: var(--surface);
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-        .sidebar-section {
-            padding: 22px 24px;
-            border-bottom: 1px solid var(--border);
-        }
-        .sidebar-section:last-child { border-bottom: none; }
-        .section-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 14px;
-        }
-        .section-head h3 {
-            font-size: 10.5px;
-            text-transform: uppercase;
-            letter-spacing: 1.6px;
-            color: var(--ink-mute);
-            font-weight: 600;
-            margin: 0;
-        }
-        .pill {
-            font-family: var(--font-mono);
-            font-size: 11px;
-            color: var(--ink-mute);
-            background: var(--paper-soft);
-            padding: 2px 8px;
-            border-radius: 99px;
-            font-feature-settings: 'tnum';
-        }
-
-        .dropzone {
-            display: block;
-            border: 1.5px dashed var(--border-strong);
-            border-radius: var(--radius);
-            padding: 24px;
-            text-align: center;
-            cursor: pointer;
-            transition: var(--transition);
-            background: var(--paper);
-            position: relative;
-            box-sizing: border-box;
-        }
-        .dropzone:hover, .dropzone.drag-over {
-            border-color: var(--ink);
-            background: var(--paper-soft);
-        }
-        .dropzone-icon {
-            width: 40px; height: 40px;
-            margin: 0 auto 10px;
-            background: var(--surface);
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            color: var(--ink-mute);
-            border: 1px solid var(--border);
-        }
-        .dropzone-text { font-size: 13px; font-weight: 500; }
-        .dropzone-hint { font-size: 11.5px; color: var(--ink-mute); margin-top: 4px; }
-        .dropzone.loaded {
-            border-style: solid;
-            border-color: var(--border);
-            background: var(--surface);
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            text-align: left;
-            cursor: default;
-        }
-        .dropzone.loaded:hover { background: var(--surface); border-color: var(--border); }
-        .dz-thumb {
-            width: 44px; height: 44px;
-            border-radius: 8px;
-            background: var(--paper);
-            border: 1px solid var(--border);
-            object-fit: cover;
-            flex-shrink: 0;
-            display: block;
-        }
-        .dz-meta { flex: 1 1 auto; min-width: 0; overflow: hidden; padding-left: 8px; }
-        .dz-name {
-            font-size: 13px;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.3;
-            color: var(--ink);
-        }
-        .dz-size {
-            font-size: 11.5px;
-            color: var(--ink-mute);
-            margin-top: 2px;
-            font-family: var(--font-mono);
-            letter-spacing: 0.2px;
-        }
-        .dz-actions { display: flex; gap: 6px; flex-shrink: 0; }
-        .dz-iconbtn {
-            background: var(--paper);
-            border: 1px solid var(--border);
-            color: var(--ink-mute);
-            width: 30px; height: 30px;
-            display: grid;
-            place-items: center;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: var(--transition);
-            padding: 0;
-            flex-shrink: 0;
-        }
-        .dz-iconbtn svg { width: 14px; height: 14px; display: block; }
-        .dz-iconbtn:hover { color: var(--ink); border-color: var(--ink); background: var(--surface); }
-        .dz-iconbtn.danger:hover { color: var(--danger); border-color: var(--danger); background: rgba(155,61,61,0.06); }
-
-        .legend {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 7px 10px;
-            background: var(--paper);
-            border-radius: var(--radius-sm);
-            font-size: 12px;
-        }
-        .legend-swatch {
-            width: 12px; height: 12px;
-            border-radius: 3px;
-            border: 2px solid var(--ink);
-            background: transparent;
-        }
-        .legend-swatch.signature { border-color: var(--signature); }
-        .legend-swatch.date { border-color: #6B5DBA; }
-        .legend-swatch.numeric { border-color: #B07A2A; }
-
-        .entries-wrap {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 14px 14px 80px;
-            min-height: 0;
-        }
-        .entries-empty {
-            text-align: center;
-            padding: 32px 16px;
-            color: var(--ink-mute);
-            font-size: 13px;
-        }
-        .entries-empty .icon {
-            width: 56px; height: 56px;
-            margin: 0 auto 14px;
-            background: var(--paper);
-            border-radius: 50%;
-            display: grid; place-items: center;
-            border: 1px dashed var(--border-strong);
-            color: var(--ink-faint);
-        }
-        .entries-empty em { font-style: italic; color: var(--ink); font-family: var(--font-serif); font-size: 15px; }
-
-        .entry-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            margin-bottom: 8px;
-            padding: 12px 14px;
-            transition: var(--transition);
-            position: relative;
-            animation: entryIn 280ms cubic-bezier(0.2, 0.9, 0.4, 1.1);
-        }
-        @keyframes entryIn {
-            from { opacity: 0; transform: translateX(-8px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        .entry-card:hover { border-color: var(--ink-faint); box-shadow: var(--shadow-xs); }
-        .entry-card.active {
-            border-color: var(--ink);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-        .entry-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-        .entry-marker {
-            width: 22px; height: 22px;
-            border-radius: 6px;
-            display: grid; place-items: center;
-            font-size: 11px;
-            font-weight: 600;
-            font-family: var(--font-mono);
-            color: var(--surface);
-            background: var(--ink);
-            flex-shrink: 0;
-        }
-        .entry-marker.signature { background: var(--signature); }
-        .entry-marker.date { background: #6B5DBA; }
-        .entry-marker.numeric { background: #B07A2A; }
-        .entry-name {
-            flex-grow: 1;
-            font-family: var(--font-serif);
-            font-size: 16px;
-            font-weight: 500;
-            background: transparent;
-            border: none;
-            outline: none;
-            padding: 2px 0;
-            color: var(--ink);
-            border-bottom: 1px solid transparent;
-            min-width: 0;
-        }
-        .entry-name:hover { border-bottom-color: var(--border); }
-        .entry-name:focus { border-bottom-color: var(--ink); }
-        .entry-del {
-            border: none;
-            background: transparent;
-            color: var(--ink-faint);
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
-            transition: var(--transition);
-            display: grid;
-            place-items: center;
-        }
-        .entry-del:hover { color: var(--danger); background: rgba(155,61,61,0.08); }
-        .entry-del svg { width: 14px; height: 14px; }
-
-        .entry-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 6px;
-        }
-        .entry-type {
-            font-family: var(--font-sans);
-            font-size: 11px;
-            padding: 4px 10px;
-            border: 1px solid var(--border);
-            border-radius: 99px;
-            background: var(--paper);
-            color: var(--ink);
-            cursor: pointer;
-            outline: none;
-            transition: var(--transition);
-        }
-        .entry-type:focus { border-color: var(--ink); }
-        .entry-pad-wrap {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 11px;
-            color: var(--ink-mute);
-        }
-        .entry-pad {
-            width: 44px;
-            font-family: var(--font-mono);
-            font-size: 11px;
-            padding: 3px 6px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            text-align: right;
-            background: var(--paper);
-            outline: none;
-        }
-        .entry-coord {
-            margin-left: auto;
-            font-family: var(--font-mono);
-            font-size: 10.5px;
-            color: var(--ink-faint);
-            letter-spacing: 0.2px;
-        }
-
-        .sidebar-cta {
-            padding: 16px 24px;
-            border-top: 1px solid var(--border);
-            background: var(--surface);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .btn-save-template {
-            width: 100%;
-            padding: 14px;
-            background: var(--ink);
-            color: var(--paper);
-            border: none;
-            border-radius: 99px;
-            font-family: var(--font-sans);
-            font-size: 13px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            cursor: pointer;
-            transition: var(--transition);
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-        .btn-save-template:hover:not(:disabled) { background: var(--ink-soft); transform: translateY(-1px); box-shadow: var(--shadow-md); }
-        .btn-save-template:disabled { opacity: 0.5; cursor: not-allowed; }
-        .hint-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: var(--ink-faint);
-        }
-        kbd {
-            font-family: var(--font-mono);
-            font-size: 10px;
-            background: var(--paper-soft);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 1px 5px;
-            color: var(--ink-mute);
-        }
-
-        .workspace {
-            flex-grow: 1;
-            background:
-                radial-gradient(circle, var(--border) 1px, transparent 1px) 0 0 / 22px 22px,
-                var(--paper);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        .workspace-toolbar {
-            position: absolute;
-            top: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 4px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 99px;
-            padding: 4px;
-            box-shadow: var(--shadow-sm);
-            z-index: 5;
-        }
-        .tool-btn {
-            border: none;
-            background: transparent;
-            color: var(--ink-mute);
-            padding: 8px 12px;
-            border-radius: 99px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            font-weight: 500;
-            font-family: var(--font-mono);
-            transition: var(--transition);
-            font-feature-settings: 'tnum';
-        }
-        .tool-btn svg { width: 14px; height: 14px; }
-        .tool-btn:hover { color: var(--ink); background: var(--paper); }
-        .tool-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-        .tool-divider { width: 1px; height: 20px; background: var(--border); margin: 0 4px; align-self: center; }
-        .zoom-display { min-width: 44px; text-align: center; }
-
-        .canvas-stage {
-            flex-grow: 1;
-            position: relative;
-            overflow: auto;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 80px 60px 60px;
-        }
-        #canvas-container {
-            position: relative;
-            box-shadow: var(--shadow-lg);
-            background: white;
-            line-height: 0;
-            transform-origin: top center;
-            transition: transform 200ms ease;
-        }
-        #preview-img { display: block; user-select: none; -webkit-user-drag: none; max-width: 900px; }
-        #drawing-canvas { position: absolute; top: 0; left: 0; cursor: crosshair; }
-
-        .workspace-empty {
-            position: absolute;
-            inset: 0;
-            display: grid;
-            place-items: center;
-            pointer-events: none;
-        }
-        .workspace-empty-inner {
-            text-align: center;
-            background: var(--surface);
-            border: 1px dashed var(--border-strong);
-            border-radius: var(--radius-lg);
-            padding: 48px 56px;
-            max-width: 460px;
-            box-shadow: var(--shadow-sm);
-        }
-        .workspace-empty h2 {
-            font-family: var(--font-serif);
-            font-size: 28px;
-            font-weight: 500;
-            margin: 0 0 10px;
-            letter-spacing: -0.4px;
-        }
-        .workspace-empty p {
-            font-size: 14px;
-            color: var(--ink-mute);
-            margin: 0 0 18px;
-            line-height: 1.5;
-        }
-        .workspace-empty .steps {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            font-size: 12px;
-            color: var(--ink-mute);
-            margin-top: 18px;
-        }
-        .workspace-empty .step b {
-            display: block;
-            font-family: var(--font-serif);
-            font-size: 18px;
-            font-weight: 500;
-            color: var(--ink);
-            font-style: italic;
-        }
-        .workspace-empty .step-arrow { color: var(--ink-faint); align-self: center; }
-
-        .name-modal-bd {
-            position: fixed; inset: 0;
-            background: rgba(20,30,40,0.4);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            animation: fadeIn 200ms ease;
-        }
-        .name-modal-bd.open { display: flex; }
-        .name-modal {
-            background: var(--surface);
-            border-radius: var(--radius-lg);
-            padding: 28px;
-            width: 380px;
-            box-shadow: var(--shadow-lg);
-            animation: modalIn 280ms cubic-bezier(0.2, 0.9, 0.4, 1.1);
-        }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes modalIn {
-            from { opacity: 0; transform: translateY(8px) scale(0.97); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .name-modal h3 {
-            font-family: var(--font-serif);
-            font-size: 22px;
-            font-weight: 500;
-            margin: 0 0 4px;
-        }
-        .name-modal .sub { font-size: 13px; color: var(--ink-mute); margin-bottom: 18px; }
-        .name-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-        .type-pick {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-            margin-top: 10px;
-        }
-        .type-pick label {
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 8px 6px;
-            text-align: center;
-            font-size: 11px;
-            cursor: pointer;
-            transition: var(--transition);
-            background: var(--paper);
-        }
-        .type-pick input { position: absolute; opacity: 0; pointer-events: none; }
-        .type-pick label:hover { border-color: var(--ink-faint); }
-        .type-pick input:checked + span { color: var(--ink); }
-        .type-pick label:has(input:checked) {
-            border-color: var(--ink);
-            background: var(--surface);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-    </style>
-</head>
-<body>
-
+<th:block th:fragment="editorTopbar">
 <div class="editor-topbar">
     <a class="crumb" href="/templates">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
         Реестр
     </a>
     <div class="divider"></div>
-    <a class="brand" href="/templates" style="text-decoration: none;">
-        <span class="brand-mark">S</span>
-    </a>
+    <a class="brand" href="/templates"><span class="brand-mark">S</span></a>
     <div class="doc-title-wrap">
-        <input id="templateName" class="doc-title-input" type="text" placeholder="Безымянный документ" oninput="saveToLocal()">
+        <input id="templateName" class="doc-title-input" type="text" placeholder="Безымянный документ">
     </div>
-    <div id="saveState" class="save-state"><span class="dot"></span><span id="saveStateText">Готово</span></div>
+    <div id="saveState" class="save-state">
+        <span class="dot"></span>
+        <span id="saveStateText">Готово</span>
+    </div>
 </div>
+</th:block>
 
+<th:block th:fragment="editorContent">
 <div class="editor-layout">
 
     <aside class="sidebar">
         <div class="sidebar-section">
-            <div class="section-head"><h3>Эталонный образ</h3></div>
+            <div class="section-head"><h3>Эталонный файл</h3></div>
+
             <div class="dropzone" id="dropzone" role="button" tabindex="0">
-                <input type="file" id="imageLoader" accept="image/*" hidden>
+                <input type="file" id="imageLoader" accept="image/*,application/pdf" hidden>
+
                 <div id="dzEmpty">
                     <div class="dropzone-icon">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
                     </div>
-                    <div class="dropzone-text">Перетащите изображение</div>
-                    <div class="dropzone-hint">или нажмите, чтобы выбрать · JPG, PNG</div>
+                    <div class="dropzone-text">Перетащите файл</div>
+                    <div class="dropzone-hint">JPG, PNG или PDF · несколько страниц — только PDF</div>
                 </div>
-                <div id="dzLoaded" style="display: none; width: 100%">
+
+                <div id="dzUploading" style="display:none;width:100%;align-items:center;gap:12px;padding:4px 0">
+                    <div style="width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--ink);border-radius:50%;animation:spin 0.9s linear infinite;flex-shrink:0"></div>
+                    <div>
+                        <div style="font-size:13px;font-weight:500">Загрузка PDF…</div>
+                        <div style="font-size:11.5px;color:var(--ink-mute);margin-top:2px">Разбиваем на страницы</div>
+                    </div>
+                </div>
+
+                <div id="dzLoaded" style="display:none;width:100%">
                     <img class="dz-thumb" id="dzThumb" alt="">
                     <div class="dz-meta">
                         <div class="dz-name" id="dzName">—</div>
@@ -603,12 +56,14 @@
                         <button type="button" class="dz-iconbtn" id="dzReplace" title="Заменить">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/></svg>
                         </button>
-                        <button type="button" class="dz-iconbtn danger" id="dzRemove" title="Удалить">
+                        <button type="button" class="dz-iconbtn danger" id="dzRemove" title="Убрать">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
                         </button>
                     </div>
                 </div>
             </div>
+
+            <div id="pageSlider" style="display:none;flex-wrap:nowrap;overflow-x:auto;gap:6px;margin-top:12px;padding-bottom:4px"></div>
         </div>
 
         <div class="sidebar-section">
@@ -621,10 +76,10 @@
             </div>
         </div>
 
-        <div class="sidebar-section" style="flex-grow: 1; display: flex; flex-direction: column; min-height: 0; padding-bottom: 0;">
+        <div class="sidebar-section" style="flex-grow:1;display:flex;flex-direction:column;min-height:0;padding-bottom:0">
             <div class="section-head">
                 <h3>Размеченные поля</h3>
-                <span class="pill" id="entryCount">0</span>
+                <span class="pill" id="entryCount">0</span><span id="entryCountHint" style="font-size:10px;color:var(--ink-faint);margin-left:4px"></span>
             </div>
             <div class="entries-wrap" id="entriesList"></div>
         </div>
@@ -636,37 +91,47 @@
             </button>
             <div class="hint-row">
                 <span><kbd>⌘Z</kbd> Отменить</span>
-                <span><kbd>2×click</kbd> Имя</span>
+                <span><kbd>← →</kbd> Страницы</span>
                 <span><kbd>Esc</kbd> Снять</span>
             </div>
         </div>
     </aside>
 
     <section class="workspace">
-        <div class="workspace-toolbar" id="wsToolbar" style="display: none;">
+        <div class="workspace-toolbar" id="wsToolbar" style="display:none">
             <button class="tool-btn" id="btnUndo" title="Отменить (⌘Z)" disabled>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg>
             </button>
             <div class="tool-divider"></div>
-            <button class="tool-btn" id="btnZoomOut" title="Уменьшить">−</button>
-            <div class="tool-btn zoom-display" id="zoomDisplay">100%</div>
-            <button class="tool-btn" id="btnZoomIn" title="Увеличить">+</button>
-            <button class="tool-btn" id="btnZoomFit" title="По размеру">Fit</button>
+
+            <button class="tool-btn" id="btnPagePrev" title="Предыдущая страница">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div class="tool-btn zoom-display" id="pageLabel" style="min-width:52px;font-family:var(--font-mono)">1</div>
+            <button class="tool-btn" id="btnPageNext" title="Следующая страница">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
             <div class="tool-divider"></div>
-            <button class="tool-btn" id="btnClear" title="Очистить всё">
+
+            <button class="tool-btn" id="btnZoomOut">−</button>
+            <div class="tool-btn zoom-display" id="zoomDisplay">100%</div>
+            <button class="tool-btn" id="btnZoomIn">+</button>
+            <button class="tool-btn" id="btnZoomFit">Fit</button>
+            <div class="tool-divider"></div>
+            <button class="tool-btn" id="btnClear" title="Очистить страницу">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
         </div>
 
         <div class="canvas-stage" id="canvasStage">
-            <div id="canvas-container" style="display: none;">
+            <div id="canvas-container" style="display:none">
                 <img id="preview-img" alt="">
                 <canvas id="drawing-canvas"></canvas>
             </div>
             <div class="workspace-empty" id="wsEmpty">
                 <div class="workspace-empty-inner">
                     <h2>Начнём с эталона</h2>
-                    <p>Загрузите образ документа и обведите рамкой каждую область, которую нужно научить распознавать.</p>
+                    <p>Загрузите изображение или PDF и обведите рамкой каждую область, которую нужно распознавать.</p>
                     <div class="steps">
                         <div class="step"><b>1.</b> Загрузить</div>
                         <div class="step-arrow">→</div>
@@ -678,9 +143,11 @@
             </div>
         </div>
     </section>
-</div>
 
-<!-- Name modal -->
+</div>
+</th:block>
+
+<th:block th:fragment="editorModals">
 <div class="name-modal-bd" id="nameModal">
     <form class="name-modal" id="nameForm">
         <h3>Новое поле</h3>
@@ -698,603 +165,10 @@
         </div>
     </form>
 </div>
+</th:block>
 
-<div class="toast-host" id="toasts"></div>
+<th:block th:fragment="pageScripts">
+    <script type="module" th:src="@{/js/pages/editor/index.js}"></script>
+</th:block>
 
-<script>
-    const $ = (s, p = document) => p.querySelector(s);
-
-    const TYPE_COLORS = {
-        TEXT: '#1E2A32',
-        NUMERIC: '#B07A2A',
-        DATE: '#6B5DBA',
-        SIGNATURE: '#4A5D4E'
-    };
-    const TYPE_LABELS = {
-        TEXT: 'Текст',
-        NUMERIC: 'Число',
-        DATE: 'Дата',
-        SIGNATURE: 'Подпись'
-    };
-
-    const canvas = $('#drawing-canvas');
-    const ctx = canvas.getContext('2d');
-    const imageLoader = $('#imageLoader');
-    const img = $('#preview-img');
-    const container = $('#canvas-container');
-    const stage = $('#canvasStage');
-
-    let startX, startY, isDrawing = false;
-    let entries = [];
-    let scale = 1;
-    let zoom = 1;
-    let activeIdx = -1;
-    let pendingBox = null;
-
-    function saveToLocal() {
-        localStorage.setItem('draft_name', $('#templateName').value);
-        localStorage.setItem('draft_entries', JSON.stringify(entries));
-        if (img.src && img.src.startsWith('data:')) localStorage.setItem('draft_img', img.src);
-        flagDirty();
-    }
-    let saveTimer;
-    function flagDirty() {
-        const el = $('#saveState');
-        el.className = 'save-state dirty';
-        $('#saveStateText').textContent = 'Сохранение черновика…';
-        clearTimeout(saveTimer);
-        saveTimer = setTimeout(() => {
-            el.className = 'save-state saved';
-            $('#saveStateText').textContent = 'Черновик сохранён';
-        }, 600);
-    }
-
-    window.onload = () => {
-        const dName = localStorage.getItem('draft_name');
-        const dEntries = localStorage.getItem('draft_entries');
-        const dImg = localStorage.getItem('draft_img');
-        if (dName) $('#templateName').value = dName;
-        if (dEntries) { entries = JSON.parse(dEntries); renderEntries(); }
-        if (dImg) loadImageToCanvas(dImg, 'draft.png', 0);
-        updateSaveBtn();
-    };
-
-    const dz = $('#dropzone');
-    ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('drag-over'); }));
-    ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('drag-over'); }));
-    dz.addEventListener('drop', e => {
-        const f = e.dataTransfer.files[0];
-        if (f && f.type.startsWith('image/')) loadFile(f);
-    });
-    dz.addEventListener('click', e => {
-        if (dz.classList.contains('loaded')) return;
-        if (e.target.closest('button')) return;
-        imageLoader.click();
-    });
-    dz.addEventListener('keydown', e => {
-        if ((e.key === 'Enter' || e.key === ' ') && !dz.classList.contains('loaded')) { e.preventDefault(); imageLoader.click(); }
-    });
-    imageLoader.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
-    $('#dzReplace').addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); imageLoader.click(); });
-    $('#dzRemove').addEventListener('click', e => {
-        e.preventDefault(); e.stopPropagation();
-        if (entries.length && !confirm('Убрать образ? Размеченные поля сохранятся, но потеряют визуальную привязку.')) return;
-        clearImage();
-    });
-
-    function clearImage() {
-        img.removeAttribute('src');
-        $('#canvas-container').style.display = 'none';
-        $('#wsEmpty').style.display = 'grid';
-        $('#wsToolbar').style.display = 'none';
-        dz.classList.remove('loaded');
-        $('#dzEmpty').style.display = '';
-        $('#dzLoaded').style.display = 'none';
-        $('#dzThumb').removeAttribute('src');
-        imageLoader.value = '';
-        localStorage.removeItem('draft_img');
-        flagDirty();
-        updateSaveBtn();
-    }
-
-    function loadFile(file) {
-        const reader = new FileReader();
-        reader.onload = (event) => loadImageToCanvas(event.target.result, file.name, file.size);
-        reader.readAsDataURL(file);
-    }
-
-    function loadImageToCanvas(src, name = 'image', size = 0) {
-        img.onload = () => {
-            const maxW = 900;
-            const displayW = Math.min(img.naturalWidth, maxW);
-            img.style.width = displayW + 'px';
-            img.style.height = 'auto';
-            container.style.display = 'inline-block';
-            $('#wsEmpty').style.display = 'none';
-            $('#wsToolbar').style.display = 'flex';
-            $('#dzEmpty').style.display = 'none';
-            $('#dzLoaded').style.display = 'flex';
-            dz.classList.add('loaded');
-            $('#dzThumb').src = src;
-            $('#dzName').textContent = name;
-            $('#dzSize').textContent = size ? prettySize(size) + ' · ' + img.naturalWidth + '×' + img.naturalHeight : img.naturalWidth + '×' + img.naturalHeight;
-            requestAnimationFrame(() => {
-                canvas.width = img.clientWidth || displayW;
-                canvas.height = img.clientHeight || Math.round(displayW * img.naturalHeight / img.naturalWidth);
-                scale = img.naturalWidth / (img.clientWidth || displayW);
-                drawAll();
-                saveToLocal();
-                updateSaveBtn();
-            });
-        };
-        img.src = src;
-    }
-
-    function prettySize(b) {
-        if (b < 1024) return b + ' B';
-        if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
-        return (b / (1024 * 1024)).toFixed(1) + ' MB';
-    }
-
-    function getPos(e) {
-        const r = canvas.getBoundingClientRect();
-        return {
-            x: (e.clientX - r.left) * (canvas.width / r.width),
-            y: (e.clientY - r.top) * (canvas.height / r.height)
-        };
-    }
-
-    const HANDLE_R = 6;
-    let mode = null;
-    let resizeHandle = null;
-    let dragOrigin = null;
-
-    function rectOf(i) {
-        const b = entries[i].box;
-        return { x: b.x / scale, y: b.y / scale, w: b.width / scale, h: b.height / scale };
-    }
-
-    function hitHandle(px, py, i) {
-        const r = rectOf(i);
-        const pts = [
-            ['nw', r.x,            r.y],
-            ['n',  r.x + r.w / 2,  r.y],
-            ['ne', r.x + r.w,      r.y],
-            ['e',  r.x + r.w,      r.y + r.h / 2],
-            ['se', r.x + r.w,      r.y + r.h],
-            ['s',  r.x + r.w / 2,  r.y + r.h],
-            ['sw', r.x,            r.y + r.h],
-            ['w',  r.x,            r.y + r.h / 2]
-        ];
-        for (const [name, hx, hy] of pts) {
-            if (Math.abs(px - hx) <= HANDLE_R && Math.abs(py - hy) <= HANDLE_R) return name;
-        }
-        return null;
-    }
-
-    function hitTest(x, y) {
-        for (let i = entries.length - 1; i >= 0; i--) {
-            const r = rectOf(i);
-            if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return i;
-        }
-        return -1;
-    }
-
-    const CURSOR_FOR_HANDLE = { nw: 'nwse-resize', n: 'ns-resize', ne: 'nesw-resize', e: 'ew-resize', se: 'nwse-resize', s: 'ns-resize', sw: 'nesw-resize', w: 'ew-resize' };
-
-    canvas.addEventListener('mousedown', (e) => {
-        if (!img.src) return;
-        const p = getPos(e);
-
-        if (activeIdx >= 0) {
-            const h = hitHandle(p.x, p.y, activeIdx);
-            if (h) {
-                mode = 'resize';
-                resizeHandle = h;
-                dragOrigin = { mx: p.x, my: p.y, box: { ...entries[activeIdx].box } };
-                return;
-            }
-        }
-
-        const hit = hitTest(p.x, p.y);
-        if (hit >= 0) {
-            activeIdx = hit;
-            mode = 'move';
-            dragOrigin = { mx: p.x, my: p.y, box: { ...entries[hit].box } };
-            renderEntries();
-            drawAll();
-            return;
-        }
-
-        activeIdx = -1;
-        mode = 'create';
-        startX = p.x; startY = p.y;
-        renderEntries();
-        drawAll();
-    });
-
-    canvas.addEventListener('mousemove', (e) => {
-        const p = getPos(e);
-
-        if (!mode) {
-            let cur = 'crosshair';
-            if (activeIdx >= 0) {
-                const h = hitHandle(p.x, p.y, activeIdx);
-                if (h) cur = CURSOR_FOR_HANDLE[h];
-                else if (hitTest(p.x, p.y) >= 0) cur = 'move';
-            } else if (hitTest(p.x, p.y) >= 0) cur = 'pointer';
-            canvas.style.cursor = cur;
-            return;
-        }
-
-        if (mode === 'create') {
-            drawAll();
-            ctx.strokeStyle = TYPE_COLORS.TEXT;
-            ctx.lineWidth = 2;
-            ctx.setLineDash([6, 4]);
-            ctx.strokeRect(startX, startY, p.x - startX, p.y - startY);
-            ctx.setLineDash([]);
-            const w = Math.abs(p.x - startX) * scale;
-            const h = Math.abs(p.y - startY) * scale;
-            const label = Math.round(w) + ' × ' + Math.round(h);
-            ctx.font = '11px ui-monospace, monospace';
-            const tw = ctx.measureText(label).width + 10;
-            ctx.fillStyle = 'rgba(30,42,50,0.85)';
-            ctx.fillRect(p.x + 6, p.y + 6, tw, 18);
-            ctx.fillStyle = '#F4F2EF';
-            ctx.fillText(label, p.x + 11, p.y + 19);
-            return;
-        }
-
-        if (mode === 'move' && activeIdx >= 0) {
-            const dx = (p.x - dragOrigin.mx) * scale;
-            const dy = (p.y - dragOrigin.my) * scale;
-            const orig = dragOrigin.box;
-            const maxX = img.naturalWidth - orig.width;
-            const maxY = img.naturalHeight - orig.height;
-            entries[activeIdx].box.x = Math.max(0, Math.min(maxX, Math.round(orig.x + dx)));
-            entries[activeIdx].box.y = Math.max(0, Math.min(maxY, Math.round(orig.y + dy)));
-            drawAll();
-            updateCoordReadout();
-            return;
-        }
-
-        if (mode === 'resize' && activeIdx >= 0) {
-            const dx = (p.x - dragOrigin.mx) * scale;
-            const dy = (p.y - dragOrigin.my) * scale;
-            const orig = dragOrigin.box;
-            let x = orig.x, y = orig.y, w = orig.width, h = orig.height;
-            const MIN = 8;
-            if (resizeHandle.includes('e')) w = Math.max(MIN, orig.width + dx);
-            if (resizeHandle.includes('s')) h = Math.max(MIN, orig.height + dy);
-            if (resizeHandle.includes('w')) { x = orig.x + dx; w = orig.width - dx; if (w < MIN) { x = orig.x + orig.width - MIN; w = MIN; } }
-            if (resizeHandle.includes('n')) { y = orig.y + dy; h = orig.height - dy; if (h < MIN) { y = orig.y + orig.height - MIN; h = MIN; } }
-            x = Math.max(0, Math.min(img.naturalWidth - MIN, x));
-            y = Math.max(0, Math.min(img.naturalHeight - MIN, y));
-            w = Math.min(w, img.naturalWidth - x);
-            h = Math.min(h, img.naturalHeight - y);
-            entries[activeIdx].box = { x: Math.round(x), y: Math.round(y), width: Math.round(w), height: Math.round(h), pageNumber: orig.pageNumber || 0 };
-            drawAll();
-            updateCoordReadout();
-            return;
-        }
-    });
-
-    canvas.addEventListener('mouseup', (e) => {
-        if (!mode) return;
-        const p = getPos(e);
-
-        if (mode === 'create') {
-            const w = Math.abs(p.x - startX), h = Math.abs(p.y - startY);
-            if (w >= 6 && h >= 6) {
-                pendingBox = {
-                    x: Math.round(Math.min(startX, p.x) * scale),
-                    y: Math.round(Math.min(startY, p.y) * scale),
-                    width: Math.round(w * scale),
-                    height: Math.round(h * scale),
-                    pageNumber: 0
-                };
-                openNameModal();
-            }
-        }
-
-        if (mode === 'move' || mode === 'resize') {
-            renderEntries();
-            saveToLocal();
-        }
-
-        mode = null;
-        resizeHandle = null;
-        dragOrigin = null;
-        drawAll();
-    });
-
-    canvas.addEventListener('dblclick', (e) => {
-        if (!img.src) return;
-        const p = getPos(e);
-        const i = hitTest(p.x, p.y);
-        if (i < 0) return;
-        const newName = prompt('Имя поля:', entries[i].name);
-        if (newName && newName.trim()) {
-            entries[i].name = newName.trim();
-            renderEntries();
-            drawAll();
-            saveToLocal();
-        }
-    });
-
-    function updateCoordReadout() {
-        if (activeIdx < 0) return;
-        const card = document.querySelector(`.entry-card[data-i="${activeIdx}"] .entry-coord`);
-        if (card) card.textContent = entries[activeIdx].box.width + '×' + entries[activeIdx].box.height;
-    }
-
-    window.addEventListener('keydown', (e) => {
-        if (document.activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && entries.length > 0) {
-            entries.pop();
-            renderEntries();
-            drawAll();
-            saveToLocal();
-            updateSaveBtn();
-        }
-        if (e.key === 'Escape') {
-            activeIdx = -1;
-            closeNameModal();
-            renderEntries();
-            drawAll();
-        }
-    });
-
-    function drawAll() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        entries.forEach((entry, i) => {
-            const b = entry.box;
-            const c = TYPE_COLORS[entry.type] || TYPE_COLORS.TEXT;
-            const x = b.x / scale, y = b.y / scale, w = b.width / scale, h = b.height / scale;
-            const active = (i === activeIdx);
-
-            const padDisp = (entry.padding || 0) / scale;
-            if (padDisp > 0.5) {
-                ctx.save();
-                ctx.strokeStyle = c;
-                ctx.globalAlpha = 0.45;
-                ctx.lineWidth = 1;
-                ctx.setLineDash([3, 3]);
-                ctx.strokeRect(x - padDisp, y - padDisp, w + padDisp * 2, h + padDisp * 2);
-                ctx.globalAlpha = 0.06;
-                ctx.fillStyle = c;
-                ctx.fillRect(x - padDisp, y - padDisp, w + padDisp * 2, padDisp);
-                ctx.fillRect(x - padDisp, y + h, w + padDisp * 2, padDisp);
-                ctx.fillRect(x - padDisp, y, padDisp, h);
-                ctx.fillRect(x + w, y, padDisp, h);
-                ctx.restore();
-            }
-
-            if (active) {
-                ctx.fillStyle = c + '1F';
-                ctx.fillRect(x, y, w, h);
-            }
-            ctx.strokeStyle = c;
-            ctx.lineWidth = active ? 2.5 : 2;
-            ctx.setLineDash([]);
-            ctx.strokeRect(x, y, w, h);
-
-            ctx.font = '600 11px Inter, sans-serif';
-            const label = (entry.name || '').toUpperCase();
-            const tw = ctx.measureText(label).width + 14;
-            const tagY = y - 18 - (padDisp > 0.5 ? padDisp : 0);
-            const tagYFinal = Math.max(0, tagY);
-            ctx.fillStyle = c;
-            ctx.fillRect(x, tagYFinal, tw, 18);
-            ctx.fillStyle = '#F4F2EF';
-            ctx.fillText(label, x + 7, tagYFinal + 13);
-
-            if (active) {
-                const pts = [
-                    [x,         y],
-                    [x + w / 2, y],
-                    [x + w,     y],
-                    [x + w,     y + h / 2],
-                    [x + w,     y + h],
-                    [x + w / 2, y + h],
-                    [x,         y + h],
-                    [x,         y + h / 2]
-                ];
-                pts.forEach(([hx, hy]) => {
-                    ctx.fillStyle = '#FFFFFF';
-                    ctx.strokeStyle = c;
-                    ctx.lineWidth = 1.5;
-                    ctx.beginPath();
-                    ctx.rect(hx - 4, hy - 4, 8, 8);
-                    ctx.fill();
-                    ctx.stroke();
-                });
-            }
-        });
-    }
-
-    function renderEntries() {
-        const list = $('#entriesList');
-        $('#entryCount').textContent = entries.length;
-        if (entries.length === 0) {
-            list.innerHTML = `
-                <div class="entries-empty">
-                    <div class="icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="3 3"/></svg>
-                    </div>
-                    <em>Поля появятся здесь</em><br>
-                    Обведите рамкой нужные области на образе.
-                </div>`;
-            updateSaveBtn();
-            return;
-        }
-        list.innerHTML = entries.map((entry, i) => {
-            const cls = entry.type.toLowerCase();
-            return `
-            <div class="entry-card ${i === activeIdx ? 'active' : ''}" data-i="${i}">
-                <div class="entry-row">
-                    <div class="entry-marker ${cls}">${i + 1}</div>
-                    <input class="entry-name" value="${escapeHtml(entry.name)}" data-i="${i}" />
-                    <button class="entry-del" data-i="${i}" title="Удалить">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                    </button>
-                </div>
-                <div class="entry-controls">
-                    <select class="entry-type" data-i="${i}">
-                        ${Object.keys(TYPE_LABELS).map(k => `<option value="${k}" ${entry.type === k ? 'selected' : ''}>${TYPE_LABELS[k]}</option>`).join('')}
-                    </select>
-                    <div class="entry-pad-wrap">
-                        <span>отступ</span>
-                        <input class="entry-pad" type="number" value="${entry.padding}" min="0" max="40" data-i="${i}">
-                        <span>px</span>
-                    </div>
-                    <div class="entry-coord">${entry.box.width}×${entry.box.height}</div>
-                </div>
-            </div>`;
-        }).join('');
-
-        list.querySelectorAll('.entry-card').forEach(card => {
-            card.addEventListener('click', e => {
-                if (e.target.closest('input, select, button')) return;
-                activeIdx = +card.dataset.i;
-                renderEntries();
-                drawAll();
-            });
-        });
-        list.querySelectorAll('.entry-name').forEach(inp => {
-            inp.addEventListener('input', e => {
-                entries[+e.target.dataset.i].name = e.target.value;
-                drawAll(); saveToLocal();
-            });
-        });
-        list.querySelectorAll('.entry-type').forEach(sel => {
-            sel.addEventListener('change', e => {
-                entries[+e.target.dataset.i].type = e.target.value;
-                renderEntries(); drawAll(); saveToLocal();
-            });
-        });
-        list.querySelectorAll('.entry-pad').forEach(inp => {
-            inp.addEventListener('input', e => {
-                entries[+e.target.dataset.i].padding = parseInt(e.target.value || 0, 10);
-                drawAll();
-            });
-            inp.addEventListener('change', e => {
-                entries[+e.target.dataset.i].padding = parseInt(e.target.value || 0, 10);
-                drawAll();
-                saveToLocal();
-            });
-        });
-        list.querySelectorAll('.entry-del').forEach(btn => {
-            btn.addEventListener('click', e => { e.stopPropagation(); deleteEntry(+btn.dataset.i); });
-        });
-
-        $('#btnUndo').disabled = entries.length === 0;
-        updateSaveBtn();
-    }
-
-    function deleteEntry(i) {
-        entries.splice(i, 1);
-        if (activeIdx === i) activeIdx = -1;
-        renderEntries(); drawAll(); saveToLocal();
-    }
-
-    function updateSaveBtn() {
-        const ok = entries.length > 0 && $('#templateName').value.trim() && img.src;
-        $('#btnSave').disabled = !ok;
-    }
-    $('#templateName').addEventListener('input', updateSaveBtn);
-
-    function openNameModal() {
-        $('#nameInput').value = '';
-        $('input[name="ftype"][value="TEXT"]').checked = true;
-        $('#nameModal').classList.add('open');
-        setTimeout(() => $('#nameInput').focus(), 30);
-    }
-    function closeNameModal() {
-        $('#nameModal').classList.remove('open');
-        pendingBox = null;
-        drawAll();
-    }
-    $('#nameCancel').addEventListener('click', closeNameModal);
-    $('#nameForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const name = $('#nameInput').value.trim();
-        if (!name) return;
-        const type = document.querySelector('input[name="ftype"]:checked').value;
-        entries.push({ name, type, padding: 5, box: pendingBox });
-        pendingBox = null;
-        $('#nameModal').classList.remove('open');
-        renderEntries(); drawAll(); saveToLocal();
-    });
-
-    function applyZoom() {
-        container.style.transform = `scale(${zoom})`;
-        $('#zoomDisplay').textContent = Math.round(zoom * 100) + '%';
-    }
-    $('#btnZoomIn').addEventListener('click', () => { zoom = Math.min(2, zoom + 0.1); applyZoom(); });
-    $('#btnZoomOut').addEventListener('click', () => { zoom = Math.max(0.4, zoom - 0.1); applyZoom(); });
-    $('#btnZoomFit').addEventListener('click', () => { zoom = 1; applyZoom(); });
-
-    $('#btnUndo').addEventListener('click', () => {
-        if (entries.length === 0) return;
-        entries.pop(); renderEntries(); drawAll(); saveToLocal();
-    });
-    $('#btnClear').addEventListener('click', () => {
-        if (!entries.length) return;
-        if (!confirm('Удалить все размеченные поля?')) return;
-        entries = []; activeIdx = -1; renderEntries(); drawAll(); saveToLocal();
-    });
-
-    function toast(msg, kind = '') {
-        const t = document.createElement('div');
-        t.className = 'toast ' + kind;
-        t.textContent = msg;
-        $('#toasts').appendChild(t);
-        setTimeout(() => { t.style.animation = 'toastOut 240ms forwards'; setTimeout(() => t.remove(), 260); }, 2400);
-    }
-
-    function escapeHtml(s) {
-        return (s || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-    }
-
-    $('#btnSave').addEventListener('click', async () => {
-        const name = $('#templateName').value.trim();
-        if (!name || entries.length === 0) return;
-        const payload = { name, baseWidth: img.naturalWidth, baseHeight: img.naturalHeight, entries };
-        const btn = $('#btnSave');
-        btn.disabled = true;
-        const orig = btn.innerHTML;
-        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M22 12a10 10 0 0 0-10-10"/></svg> Сохраняем…';
-        try {
-            const r = await fetch('/api/templates', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (!r.ok) throw new Error();
-            toast('Шаблон зафиксирован в реестре', 'success');
-            localStorage.removeItem('draft_name');
-            localStorage.removeItem('draft_entries');
-            localStorage.removeItem('draft_img');
-            setTimeout(() => { window.location.href = '/templates'; }, 700);
-        } catch {
-            btn.disabled = false; btn.innerHTML = orig;
-            toast('Не удалось сохранить', 'error');
-        }
-    });
-
-    window.addEventListener('resize', () => {
-        if (!img.src) return;
-        canvas.width = img.clientWidth;
-        canvas.height = img.clientHeight;
-        scale = img.naturalWidth / img.clientWidth;
-        drawAll();
-    });
-
-    const styleTag = document.createElement('style');
-    styleTag.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
-    document.head.appendChild(styleTag);
-</script>
-</body>
 </html>

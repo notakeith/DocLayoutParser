@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="topbar(activeNav)" class="topbar">
+    <a href="/templates" class="brand">
+        <span class="brand-mark">S</span>
+        <span class="brand-name">Sparkling<span>Duo</span></span>
+    </a>
+    <nav class="topbar-nav">
+        <a href="/templates"        th:classappend="${activeNav == 'list'}   ? 'active'">Реестр</a>
+        <a href="/templates/editor" th:classappend="${activeNav == 'editor'} ? 'active'">Конструктор</a>
+        <a href="/jobs"             th:classappend="${activeNav == 'jobs'}   ? 'active'">История</a>
+    </nav>
+    <div style="font-size:12px;color:var(--ink-mute);">v 2.4</div>
+</div>
+</body>
+</html>

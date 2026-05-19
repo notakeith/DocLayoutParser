@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru"
+      th:replace="~{layout/page :: layout(
+          pageTitle  = 'История задач',
+          activeNav  = 'jobs',
+          extraCss   = '/css/jobs.css',
+          extraCss2  = null
+      )}">
+
+<th:block th:fragment="pageContent">
+<div class="page">
+
+    <div class="hero">
+        <div class="hero-titles">
+            <div class="eyebrow">Журнал обработки</div>
+            <h1>История <em>задач</em></h1>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
+            <span id="liveIndicator" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--signature)">
+                <span class="live-dot"></span>Идёт обработка
+            </span>
+            <button class="btn" id="btnRefresh">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/></svg>
+                Обновить
+            </button>
+        </div>
+    </div>
+
+    <div class="jobs-filters">
+        <div class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px;"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="jobSearch" type="text" placeholder="Поиск по файлу, шаблону, ID…" autocomplete="off">
+        </div>
+        <select class="select sort-select" id="statusFilter">
+            <option value="ALL">Все статусы</option>
+            <option value="DONE">Готово</option>
+            <option value="PROCESSING">Обработка</option>
+            <option value="PENDING">Ожидание</option>
+            <option value="FAILED">Ошибка</option>
+        </select>
+        <select class="select sort-select" id="templateFilter">
+            <option value="ALL">Все шаблоны</option>
+        </select>
+    </div>
+
+    <div class="jobs-table-wrap">
+        <table>
+            <thead><tr>
+                <th style="width:35%">Файл</th>
+                <th>Шаблон</th>
+                <th>Статус</th>
+                <th>Создана</th>
+                <th>Результат</th>
+            </tr></thead>
+            <tbody id="jobsTbody"></tbody>
+        </table>
+    </div>
+
+    <div id="pagination" class="pagination"></div>
+
+</div>
+
+<div class="job-drawer-bd" id="jobDrawerBd">
+    <div class="job-drawer" id="jobDrawer">
+        <div class="drawer-head">
+            <h2 id="drawerTitle">—</h2>
+            <span id="drawerStatus" class="status-badge"></span>
+            <button class="drawer-close" id="drawerClose">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="drawer-meta" id="drawerMeta"></div>
+        <div class="drawer-body" id="drawerBody"></div>
+        <div class="drawer-actions">
+            <button class="btn" id="drawerCopyAll">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Скопировать всё
+            </button>
+            <button class="btn" id="drawerExportJson">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Скачать JSON
+            </button>
+        </div>
+    </div>
+</div>
+</th:block>
+
+<th:block th:fragment="pageScripts">
+    <script type="module" th:src="@{/js/pages/jobs.js}"></script>
+</th:block>
+
+</html>

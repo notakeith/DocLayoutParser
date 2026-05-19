@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="modalConfirm(modalId, title, bodyHtml, cancelLabel, confirmId, confirmLabel)"
+     class="modal-backdrop"
+     th:id="${modalId}">
+    <div class="modal">
+        <h3 th:text="${title}">Подтвердите действие</h3>
+        <p th:utext="${bodyHtml}">Вы уверены?</p>
+        <div class="modal-actions">
+            <button class="btn btn-ghost">[[${cancelLabel}]]</button>
+            <button class="btn btn-danger" th:id="${confirmId}">[[${confirmLabel}]]</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

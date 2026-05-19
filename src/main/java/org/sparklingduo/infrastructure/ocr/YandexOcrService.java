@@ -37,7 +37,7 @@ public class YandexOcrService implements OcrProvider {
                     .uri("https://ocr.api.cloud.yandex.net/ocr/v1/recognizeText")
                     .header("Authorization", "Bearer " + appProperties.getOcr().getYandex().getIamToken())
                     .header("x-folder-id", appProperties.getOcr().getYandex().getFolderId())
-                    .header("x-data-logging-enabled", "true") // Как в твоем curl
+                    .header("x-data-logging-enabled", "true")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(request)
                     .retrieve()

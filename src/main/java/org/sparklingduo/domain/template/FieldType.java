@@ -7,5 +7,6 @@ public enum FieldType {
     PHONE,
     HANDWRITTEN,
     SIGNATURE,
-    ANCHOR
+    ANCHOR,
+    TABLE
 }

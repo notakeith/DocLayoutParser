@@ -25,9 +25,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
+    // Health-check
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
     // JPA / Hibernate
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate6:2.17.2'
     // Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 
@@ -64,8 +67,13 @@ dependencies {
     // OpenCV
     implementation 'org.openpnp:opencv:4.9.0-0'
 
-    // OpenAI
-    implementation("com.openai:openai-java:4.35.0")
+    // AWS SDK v2 (S3 + Presigner)
+    implementation platform('software.amazon.awssdk:bom:2.25.60')
+    implementation 'software.amazon.awssdk:s3'
+    implementation 'software.amazon.awssdk:s3-transfer-manager'
+
+    // PDFBox
+    implementation 'org.apache.pdfbox:pdfbox:3.0.2'
 }
 
 test {

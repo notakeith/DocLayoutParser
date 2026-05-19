@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 public class OpenCvImageProcessor implements ImageProcessor {
 
     static {
-        // Инициализируем OpenCV один раз при загрузке класса
         nu.pattern.OpenCV.loadLocally();
     }
 

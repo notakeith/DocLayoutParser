@@ -14,15 +14,32 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   servlet:
     multipart:
-      max-file-size: 20MB
-      max-request-size: 20MB
+      max-file-size: 50MB
+      max-request-size: 100MB
+
+  task:
+    execution:
+      pool:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 50
+      thread-name-prefix: recognition-
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
 
 app:
   ocr:
@@ -43,3 +60,11 @@ app:
 
   image:
     target-width: 2000
+
+  storage:
+    endpoint: ${APP_STORAGE_ENDPOINT:http://localhost:9000}
+    access-key: ${APP_STORAGE_ACCESS_KEY:minioadmin}
+    secret-key: ${APP_STORAGE_SECRET_KEY:minioadmin}
+    uploads-bucket: ${APP_STORAGE_UPLOADS_BUCKET:uploads}
+    reference-bucket: ${APP_STORAGE_REFERENCE_BUCKET:reference-images}
+    region: us-east-1

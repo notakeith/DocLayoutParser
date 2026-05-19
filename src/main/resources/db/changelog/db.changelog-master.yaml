@@ -1,6 +1,84 @@
 databaseChangeLog:
   - changeSet:
-      id: 1775840773358-1
+      id: 1779044503038-1
+      author: notakeith
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_recognition_jobs
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: template_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: status
+                  type: VARCHAR(255)
+              - column:
+                  name: source_file_name
+                  type: VARCHAR(255)
+              - column:
+                  name: source_storage_key
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: created_ad
+                  type: DATETIME
+              - column:
+                  name: finished_at
+                  type: DATETIME
+              - column:
+                  name: error_message
+                  type: TEXT
+            tableName: recognition_jobs
+  - changeSet:
+      id: 1779044503038-2
+      author: notakeith
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_recognition_results
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: job_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: field_name
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: field_type
+                  type: VARCHAR(255)
+              - column:
+                  name: text_value
+                  type: TEXT
+              - column:
+                  name: image_storage_key
+                  type: VARCHAR(255)
+            tableName: recognition_results
+  - changeSet:
+      id: 1779044503038-3
       author: notakeith
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -54,7 +132,45 @@ databaseChangeLog:
                   type: UUID
             tableName: template_entries
   - changeSet:
-      id: 1775840773358-2
+      id: 1779044503038-4
+      author: notakeith
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_template_pages
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: page_number
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: storage_key
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: width
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: height
+                  type: INT
+              - column:
+                  name: template_id
+                  type: UUID
+            tableName: template_pages
+  - changeSet:
+      id: 1779044503038-5
       author: notakeith
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -71,18 +187,39 @@ databaseChangeLog:
                   name: name
                   type: VARCHAR(255)
               - column:
-                  constraints:
-                    nullable: false
                   name: base_width
                   type: INT
               - column:
-                  constraints:
-                    nullable: false
                   name: base_height
+                  type: INT
+              - column:
+                  name: page_count
                   type: INT
             tableName: templates
   - changeSet:
-      id: 1775840773358-3
+      id: 1779044503038-6
+      author: notakeith
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: template_id
+            baseTableName: recognition_jobs
+            constraintName: FK_RECOGNITION_JOBS_ON_TEMPLATE
+            referencedColumnNames: id
+            referencedTableName: templates
+  - changeSet:
+      id: 1779044503038-7
+      author: notakeith
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: job_id
+            baseTableName: recognition_results
+            constraintName: FK_RECOGNITION_RESULTS_ON_JOB
+            referencedColumnNames: id
+            referencedTableName: recognition_jobs
+  - changeSet:
+      id: 1779044503038-8
       author: notakeith
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -90,6 +227,17 @@ databaseChangeLog:
             baseColumnNames: template_id
             baseTableName: template_entries
             constraintName: FK_TEMPLATE_ENTRIES_ON_TEMPLATE
+            referencedColumnNames: id
+            referencedTableName: templates
+  - changeSet:
+      id: 1779044503038-9
+      author: notakeith
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: template_id
+            baseTableName: template_pages
+            constraintName: FK_TEMPLATE_PAGES_ON_TEMPLATE
             referencedColumnNames: id
             referencedTableName: templates
 

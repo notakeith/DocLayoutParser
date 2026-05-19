@@ -1,9 +1,7 @@
 package org.sparklingduo.infrastructure.config;
 
 import lombok.Data;
-import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 @Data
 @ConfigurationProperties(prefix = "app")
@@ -11,6 +9,7 @@ public class AppProperties {
     private Ocr ocr = new Ocr();
     private Llm llm = new Llm();
     private Image image = new Image();
+    private Storage storage = new Storage();
 
     @Data
     public static class Ocr {
@@ -40,5 +39,15 @@ public class AppProperties {
     @Data
     public static class Image {
         private int targetWidth;
+    }
+
+    @Data
+    public static class Storage {
+        private String endpoint;
+        private String accessKey;
+        private String secretKey;
+        private String region = "us-east-1";
+        private String uploadsBucket = "uploads";
+        private String referenceBucket = "reference-images";
     }
 }
